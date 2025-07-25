@@ -1,0 +1,42 @@
+{
+    "name": "autogen/factory",
+    "description": "AutoGen Factory Package - Intelligent model factory generation with smart fake data mapping",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "AutoGen Team",
+            "email": "team@autogen.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/console": "^10.0|^11.0",
+        "illuminate/database": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0",
+        "fakerphp/faker": "^1.23"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "orchestra/testbench": "^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AutoGen\\Packages\\Factory\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AutoGen\\Packages\\Factory\\FactoryPackageServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

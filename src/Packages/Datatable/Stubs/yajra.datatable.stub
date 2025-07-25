@@ -1,0 +1,129 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelClass }};
+use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Builder as HtmlBuilder;
+use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Html\Editor\Editor;
+use Yajra\DataTables\Html\Editor\Fields;
+use Yajra\DataTables\Services\DataTable;
+
+class {{ datatableName }} extends DataTable
+{
+    /**
+     * Build the DataTable class.
+     *
+     * @param QueryBuilder $query Results from query() method.
+     */
+    public function dataTable(QueryBuilder $query): EloquentDataTable
+    {
+        return (new EloquentDataTable($query))
+            ->addColumn('actions', function (${{ modelVariable }}) {
+                return view('datatables.actions', compact('{{ modelVariable }}'))->render();
+            })
+            {{ withBulk ? "->addColumn('select', function ($modelVariable) {
+                return '<input type=\"checkbox\" name=\"ids[]\" value=\"' . $modelVariable->id . '\" class=\"row-select\">';
+            })" : "" }}
+            ->editColumn('created_at', function (${{ modelVariable }}) {
+                return ${{ modelVariable }}->created_at->format('Y-m-d H:i:s');
+            })
+            ->editColumn('updated_at', function (${{ modelVariable }}) {
+                return ${{ modelVariable }}->updated_at->format('Y-m-d H:i:s');
+            })
+            ->rawColumns(['actions'{{ withBulk ? ", 'select'" : "" }}])
+            ->setRowId('id');
+    }
+
+    /**
+     * Get the query source of dataTable.
+     */
+    public function query({{ modelClass }} $model): QueryBuilder
+    {
+        $request = request();
+        
+        $query = $model->newQuery();
+
+        {{ queryOptimizations }}
+
+        {{ searchableColumns }}
+
+        {{ cacheImplementation }}
+
+        return $query;
+    }
+
+    /**
+     * Optional method if you want to use the html builder.
+     */
+    public function html(): HtmlBuilder
+    {
+        return $this->builder()
+            ->setTableId('{{ routeName }}-table')
+            ->columns($this->getColumns())
+            ->minifiedAjax()
+            ->dom('Bfrtip')
+            ->orderBy(0, 'asc')
+            ->selectStyleSingle()
+            ->buttons([
+                Button::make('excel')->text('Export Excel'),
+                Button::make('csv')->text('Export CSV'),
+                Button::make('pdf')->text('Export PDF'),
+                Button::make('print')->text('Print'),
+                Button::make('reset')->text('Reset'),
+                Button::make('reload')->text('Reload')
+            ])
+            ->parameters([
+                'responsive' => true,
+                'autoWidth' => false,
+                'processing' => true,
+                'serverSide' => true,
+                'searchDelay' => 350,
+                'stateSave' => {{ cache }},
+                {{ virtualScroll ? "'scrollY' => '400px',
+                'scrollCollapse' => true,
+                'scroller' => true," : "" }}
+                {{ withBulk ? "'columnDefs' => [
+                    ['orderable' => false, 'targets' => [0]],
+                    ['searchable' => false, 'targets' => [0]]
+                ]," : "" }}
+                'language' => [
+                    'processing' => '<div class=\"spinner-border\" role=\"status\"><span class=\"sr-only\">Loading...</span></div>',
+                    'emptyTable' => 'No {{ modelVariablePlural }} found',
+                    'zeroRecords' => 'No matching {{ modelVariablePlural }} found'
+                ]
+            ]);
+    }
+
+    /**
+     * Get the dataTable columns definition.
+     */
+    public function getColumns(): array
+    {
+        return [
+{{ columns }}
+        ];
+    }
+
+    /**
+     * Get the filename for export.
+     */
+    protected function filename(): string
+    {
+        return '{{ routeName }}_' . date('YmdHis');
+    }
+
+    {{ cacheImplementation }}
+
+    {{ exportColumns }}
+
+    {{ bulkActions }}
+}

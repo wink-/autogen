@@ -1,0 +1,52 @@
+@extends('{{layout}}')
+
+@section('title', '{{modelName}} Management')
+
+@push('styles')
+<link href="/css/autogen/crud.css" rel="stylesheet">
+@endpush
+
+@section('content')
+<div class="autogen-container">
+    <div class="autogen-card">
+        <!-- Header -->
+        <div class="autogen-card-header">
+            <div class="autogen-header">
+                <div>
+                    <h1 class="autogen-title">{{modelName}} Management</h1>
+                    <p class="autogen-subtitle">Manage your {{modelVariablePlural}}</p>
+                </div>
+                <div class="autogen-button-group">
+                    {{withSearchButton}}
+                    <a href="{{ route('{{routeName}}.create') }}" class="autogen-button autogen-button-primary">
+                        ➕ Add {{modelName}}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        @if(session('success'))
+            <div class="autogen-alert autogen-alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="autogen-alert autogen-alert-error">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{filtersSection}}
+
+        {{tableSection}}
+    </div>
+</div>
+
+{{deleteModal}}
+
+<script>
+{{scripts}}
+</script>
+@endsection

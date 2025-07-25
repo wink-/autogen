@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ notificationNamespace }};
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
+
+class {{ notificationName }} extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    protected ?string $filename;
+    protected ?string $filePath;
+    protected bool $success;
+    protected ?string $error;
+
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct(?string $filename, ?string $filePath, bool $success, ?string $error = null)
+    {
+        $this->filename = $filename;
+        $this->filePath = $filePath;
+        $this->success = $success;
+        $this->error = $error;
+    }
+
+    {{ notificationContent }}
+}

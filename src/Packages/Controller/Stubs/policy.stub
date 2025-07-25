@@ -1,0 +1,95 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use {{ userModel }};
+use {{ modelNamespace }}\{{ modelClass }};
+use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
+
+class {{ policyName }}
+{
+    use HandlesAuthorization;
+
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
+    {
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(User $user, {{ modelClass }} ${{ modelVariable }}): bool
+    {
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, {{ modelClass }} ${{ modelVariable }}): bool
+    {
+        // Example: Users can only update their own records
+        // return $user->id === ${{ modelVariable }}->user_id;
+        
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, {{ modelClass }} ${{ modelVariable }}): bool|Response
+    {
+        // Example: Only admins can delete, or users can delete their own records
+        // if ($user->hasRole('admin')) {
+        //     return true;
+        // }
+        // 
+        // if ($user->id === ${{ modelVariable }}->user_id) {
+        //     return true;
+        // }
+        //
+        // return Response::deny('You do not have permission to delete this {{ modelVariable }}.');
+        
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can restore the model.
+     */
+    public function restore(User $user, {{ modelClass }} ${{ modelVariable }}): bool
+    {
+        return true; // Customize as needed
+    }
+
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, {{ modelClass }} ${{ modelVariable }}): bool
+    {
+        // Usually restricted to super admins only
+        return $user->hasRole('super-admin');
+    }
+
+    /**
+     * Determine whether the user can perform bulk actions.
+     */
+    public function bulkAction(User $user): bool
+    {
+        // Restrict bulk actions to specific roles
+        return $user->hasRole(['admin', 'manager']);
+    }
+}

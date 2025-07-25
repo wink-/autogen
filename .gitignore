@@ -1,0 +1,79 @@
+# Laravel Package Development
+/vendor/
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer
+composer.phar
+composer.lock
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.testing
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+/coverage/
+/tests/temp/
+/tests/fixtures/generated/
+.phpunit.result.cache
+.phpunit.cache/
+
+# Build & Distribution
+/build/
+/dist/
+/docs/build/
+
+# Cache & temporary files
+*.cache
+*.tmp
+*.temp
+
+# Laravel specific
+storage/
+bootstrap/cache/
+.env.backup
+
+# Package specific
+/examples/generated/
+/stubs/published/
+
+# Documentation generated files
+/docs/.vuepress/dist/
+
+# Package development
+/workbench/
+/packages/*/vendor/
+/packages/*/node_modules/
+
+# Security
+auth.json
+.htaccess
+
+# Development tools
+.php-cs-fixer.cache
+.phpstan.cache
+pint.json
+
+# Generated test files
+/tests/Feature/Generated/
+/tests/Unit/Generated/

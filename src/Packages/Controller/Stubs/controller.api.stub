@@ -1,0 +1,251 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelClass }};
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
+{{ requestNamespace ? 'use ' . requestNamespace . '\' . storeRequest . ';' : '' }}
+{{ requestNamespace ? 'use ' . requestNamespace . '\' . updateRequest . ';' : '' }}
+
+class {{ controllerName }} extends Controller
+{
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        {{ policyChecks }}
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $query = {{ modelClass }}::query();
+
+        // Handle search
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+                // Add more searchable fields as needed
+            });
+        }
+
+        // Handle filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Handle sorting
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        
+        if (in_array($sortBy, ['id', 'name', 'email', 'created_at', 'updated_at'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = min($request->input('per_page', {{ paginate }}), 100);
+        ${{ modelVariablePlural }} = $query->paginate($perPage);
+
+        return JsonResource::collection(${{ modelVariablePlural }});
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{ storeRequest ?? 'Request' }} $request): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validated();
+
+            // Handle file uploads
+            if ($request->hasFile('image')) {
+                $validated['image'] = $request->file('image')->store('{{ modelVariablePlural }}/images', 'public');
+            }
+
+            ${{ modelVariable }} = {{ modelClass }}::create($validated);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => '{{ modelClass }} created successfully.',
+                'data' => new JsonResource(${{ modelVariable }}),
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to create {{ modelVariable }}.',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show({{ modelClass }} ${{ modelVariable }}): JsonResource
+    {
+        return new JsonResource(${{ modelVariable }});
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{ updateRequest ?? 'Request' }} $request, {{ modelClass }} ${{ modelVariable }}): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validated();
+
+            // Handle file uploads
+            if ($request->hasFile('image')) {
+                // Delete old file if exists
+                if (${{ modelVariable }}->image) {
+                    \Storage::disk('public')->delete(${{ modelVariable }}->image);
+                }
+                $validated['image'] = $request->file('image')->store('{{ modelVariablePlural }}/images', 'public');
+            }
+
+            ${{ modelVariable }}->update($validated);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => '{{ modelClass }} updated successfully.',
+                'data' => new JsonResource(${{ modelVariable }}),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to update {{ modelVariable }}.',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy({{ modelClass }} ${{ modelVariable }}): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            // Delete associated files
+            if (${{ modelVariable }}->image) {
+                \Storage::disk('public')->delete(${{ modelVariable }}->image);
+            }
+
+            ${{ modelVariable }}->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => '{{ modelClass }} deleted successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Failed to delete {{ modelVariable }}.',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Handle bulk operations.
+     */
+    public function bulkAction(Request $request): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:delete,activate,deactivate',
+            'ids' => 'required|array',
+            'ids.*' => 'exists:{{ modelVariablePlural }},id',
+        ]);
+
+        $ids = $request->input('ids');
+        $action = $request->input('action');
+
+        try {
+            DB::beginTransaction();
+
+            $affectedCount = 0;
+
+            switch ($action) {
+                case 'delete':
+                    $affectedCount = {{ modelClass }}::whereIn('id', $ids)->delete();
+                    $message = "{$affectedCount} {{ modelVariablePlural }} deleted successfully.";
+                    break;
+
+                case 'activate':
+                    $affectedCount = {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'active']);
+                    $message = "{$affectedCount} {{ modelVariablePlural }} activated successfully.";
+                    break;
+
+                case 'deactivate':
+                    $affectedCount = {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'inactive']);
+                    $message = "{$affectedCount} {{ modelVariablePlural }} deactivated successfully.";
+                    break;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => $message,
+                'affected_count' => $affectedCount,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Bulk operation failed.',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Get resource statistics.
+     */
+    public function stats(): JsonResponse
+    {
+        try {
+            $stats = [
+                'total' => {{ modelClass }}::count(),
+                'active' => {{ modelClass }}::where('status', 'active')->count(),
+                'inactive' => {{ modelClass }}::where('status', 'inactive')->count(),
+                'recent' => {{ modelClass }}::where('created_at', '>=', now()->subDays(7))->count(),
+            ];
+
+            return response()->json([
+                'data' => $stats,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch statistics.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

@@ -1,0 +1,52 @@
+@extends('{{layout}}')
+
+@section('title', '{{modelName}} Management')
+
+@section('content')
+<div class="container-fluid">
+    <div class="card shadow">
+        <!-- Header -->
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1 text-gray-800">{{modelName}} Management</h1>
+                    <p class="text-muted mb-0">Manage your {{modelVariablePlural}}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    {{withSearchButton}}
+                    <a href="{{ route('{{routeName}}.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add {{modelName}}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{filtersSection}}
+
+        {{tableSection}}
+    </div>
+</div>
+
+{{deleteModal}}
+
+@push('scripts')
+<script>
+{{scripts}}
+</script>
+@endpush
+@endsection

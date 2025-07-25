@@ -1,0 +1,250 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">{{ title(Str::plural('{{ modelClass }}')) }}</h3>
+                    
+                    <div class="card-tools">
+                        @if({{ withExports }})
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#" onclick="exportData('excel')">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </a>
+                                <a class="dropdown-item" href="#" onclick="exportData('csv')">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </a>
+                                <a class="dropdown-item" href="#" onclick="exportData('pdf')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <a href="{{ route('{{ routeName }}.create') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Create {{ modelClass }}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    @if({{ withSearch }})
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card card-outline card-info collapsed-card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Advanced Search</h3>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body" style="display: none;">
+                                    <form id="advanced-search-form">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="search_name">Name</label>
+                                                    <input type="text" class="form-control" id="search_name" name="search_name">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="search_email">Email</label>
+                                                    <input type="email" class="form-control" id="search_email" name="search_email">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="date_from">Date From</label>
+                                                    <input type="date" class="form-control" id="date_from" name="date_from">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="date_to">Date To</label>
+                                                    <input type="date" class="form-control" id="date_to" name="date_to">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <button type="button" class="btn btn-primary" onclick="applyAdvancedSearch()">
+                                                    <i class="fas fa-search"></i> Search
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="clearAdvancedSearch()">
+                                                    <i class="fas fa-times"></i> Clear
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    @if({{ withBulk }})
+                    <div class="row mb-3" id="bulk-actions" style="display: none;">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Bulk Actions:</strong>
+                                <span id="selected-count">0</span> items selected
+                                <div class="btn-group ml-3">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="bulkAction('activate')">
+                                        <i class="fas fa-check"></i> Activate
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('deactivate')">
+                                        <i class="fas fa-times"></i> Deactivate
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    {!! $dataTable->table(['class' => 'table table-bordered table-striped table-hover']) !!}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+{!! $dataTable->scripts() !!}
+
+@if({{ withSearch }})
+<script>
+function applyAdvancedSearch() {
+    var table = $('#{{ routeName }}-table').DataTable();
+    
+    // Get form data
+    var searchData = {};
+    $('#advanced-search-form input').each(function() {
+        if ($(this).val()) {
+            searchData[$(this).attr('name')] = $(this).val();
+        }
+    });
+    
+    // Apply search
+    table.ajax.url(table.ajax.url() + '?' + $.param(searchData)).load();
+}
+
+function clearAdvancedSearch() {
+    $('#advanced-search-form')[0].reset();
+    var table = $('#{{ routeName }}-table').DataTable();
+    table.ajax.url(table.ajax.url().split('?')[0]).load();
+}
+</script>
+@endif
+
+@if({{ withExports }})
+<script>
+function exportData(format) {
+    var table = $('#{{ routeName }}-table').DataTable();
+    var params = table.ajax.params();
+    
+    // Create form for export
+    var form = $('<form></form>');
+    form.attr('method', 'GET');
+    form.attr('action', '{{ route("{{ routeName }}.export") }}/' + format);
+    
+    // Add search parameters
+    $.each(params, function(key, value) {
+        if (key.startsWith('search') || key === 'columns' || key === 'order') {
+            form.append('<input type="hidden" name="' + key + '" value="' + JSON.stringify(value) + '">');
+        }
+    });
+    
+    // Submit form
+    $('body').append(form);
+    form.submit();
+    form.remove();
+}
+</script>
+@endif
+
+@if({{ withBulk }})
+<script>
+$(document).ready(function() {
+    var table = $('#{{ routeName }}-table').DataTable();
+    
+    // Handle select all checkbox
+    $('#select-all').on('click', function() {
+        var rows = table.rows({'search': 'applied'}).nodes();
+        $('input[type="checkbox"]', rows).prop('checked', this.checked);
+        updateBulkActions();
+    });
+    
+    // Handle individual checkboxes
+    $('#{{ routeName }}-table tbody').on('change', 'input[type="checkbox"]', function() {
+        if (!this.checked) {
+            var el = $('#select-all').get(0);
+            if (el && el.checked && ('indeterminate' in el)) {
+                el.indeterminate = true;
+            }
+        }
+        updateBulkActions();
+    });
+});
+
+function updateBulkActions() {
+    var selectedCount = $('#{{ routeName }}-table tbody input[type="checkbox"]:checked').length;
+    $('#selected-count').text(selectedCount);
+    
+    if (selectedCount > 0) {
+        $('#bulk-actions').show();
+    } else {
+        $('#bulk-actions').hide();
+    }
+}
+
+function bulkAction(action) {
+    var selectedIds = [];
+    $('#{{ routeName }}-table tbody input[type="checkbox"]:checked').each(function() {
+        selectedIds.push($(this).val());
+    });
+    
+    if (selectedIds.length === 0) {
+        alert('Please select items to perform bulk action');
+        return;
+    }
+    
+    if (action === 'delete' && !confirm('Are you sure you want to delete selected items?')) {
+        return;
+    }
+    
+    $.ajax({
+        url: '{{ route("{{ routeName }}.bulk") }}',
+        method: 'POST',
+        data: {
+            action: action,
+            ids: selectedIds,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            alert(response.message);
+            $('#{{ routeName }}-table').DataTable().ajax.reload();
+            $('#bulk-actions').hide();
+            $('#select-all').prop('checked', false);
+        },
+        error: function(xhr) {
+            alert('Error: ' + xhr.responseJSON.message);
+        }
+    });
+}
+</script>
+@endif
+@endsection

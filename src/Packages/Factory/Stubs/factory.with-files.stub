@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+{{ imports }}
+use {{ modelNamespace }};
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\{{ modelNamespace }}>
+ */
+class {{ factoryClass }} extends Factory
+{
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = {{ modelClass }}::class;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+{{ definition }}
+        ];
+    }
+
+    /**
+     * Generate a fake uploaded file for testing.
+     */
+    protected function fakeUploadedFile(string $name = 'test-file.pdf', int $size = 1024): UploadedFile
+    {
+        return UploadedFile::fake()->create($name, $size);
+    }
+
+    /**
+     * Generate a fake image for testing.
+     */
+    protected function fakeImage(string $name = 'test-image.jpg', int $width = 640, int $height = 480): UploadedFile
+    {
+        return UploadedFile::fake()->image($name, $width, $height);
+    }
+
+    /**
+     * Create with actual file uploads for more realistic testing.
+     */
+    public function withRealFiles(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            // Override file fields with actual UploadedFile instances
+            // 'avatar' => $this->fakeImage('avatar.jpg', 200, 200),
+            // 'document' => $this->fakeUploadedFile('document.pdf', 2048),
+        ]);
+    }
+{{ states }}
+{{ relationships }}
+}

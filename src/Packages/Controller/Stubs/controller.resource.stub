@@ -1,0 +1,232 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use {{ modelNamespace }}\{{ modelClass }};
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+{{ requestNamespace ? 'use ' . requestNamespace . '\' . storeRequest . ';' : '' }}
+{{ requestNamespace ? 'use ' . requestNamespace . '\' . updateRequest . ';' : '' }}
+
+class {{ controllerName }} extends Controller
+{
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        {{ policyChecks }}
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): View
+    {
+        $query = {{ modelClass }}::query();
+
+        // Handle search
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+                // Add more searchable fields as needed
+            });
+        }
+
+        // Handle filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Handle sorting
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+        $query->orderBy($sortBy, $sortDirection);
+
+        ${{ modelVariablePlural }} = $query->paginate({{ paginate }})
+            ->withQueryString();
+
+        return view('{{ viewPath }}.index', compact('{{ modelVariablePlural }}'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): View
+    {
+        return view('{{ viewPath }}.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{ storeRequest ?? 'Request' }} $request): RedirectResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validated();
+
+            // Handle file uploads
+            if ($request->hasFile('image')) {
+                $validated['image'] = $request->file('image')->store('{{ modelVariablePlural }}/images', 'public');
+            }
+
+            ${{ modelVariable }} = {{ modelClass }}::create($validated);
+
+            DB::commit();
+
+            return redirect()
+                ->route('{{ routeName }}.show', ${{ modelVariable }})
+                ->with('success', '{{ modelClass }} created successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to create {{ modelVariable }}: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show({{ modelClass }} ${{ modelVariable }}): View
+    {
+        return view('{{ viewPath }}.show', compact('{{ modelVariable }}'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit({{ modelClass }} ${{ modelVariable }}): View
+    {
+        return view('{{ viewPath }}.edit', compact('{{ modelVariable }}'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{ updateRequest ?? 'Request' }} $request, {{ modelClass }} ${{ modelVariable }}): RedirectResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validated();
+
+            // Handle file uploads
+            if ($request->hasFile('image')) {
+                // Delete old file if exists
+                if (${{ modelVariable }}->image) {
+                    \Storage::disk('public')->delete(${{ modelVariable }}->image);
+                }
+                $validated['image'] = $request->file('image')->store('{{ modelVariablePlural }}/images', 'public');
+            }
+
+            ${{ modelVariable }}->update($validated);
+
+            DB::commit();
+
+            return redirect()
+                ->route('{{ routeName }}.show', ${{ modelVariable }})
+                ->with('success', '{{ modelClass }} updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to update {{ modelVariable }}: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy({{ modelClass }} ${{ modelVariable }}): RedirectResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            // Delete associated files
+            if (${{ modelVariable }}->image) {
+                \Storage::disk('public')->delete(${{ modelVariable }}->image);
+            }
+
+            ${{ modelVariable }}->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('{{ routeName }}.index')
+                ->with('success', '{{ modelClass }} deleted successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to delete {{ modelVariable }}: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Handle bulk operations (optional).
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'action' => 'required|in:delete,activate,deactivate',
+            'ids' => 'required|array',
+            'ids.*' => 'exists:{{ modelVariablePlural }},id',
+        ]);
+
+        $ids = $request->input('ids');
+        $action = $request->input('action');
+
+        try {
+            DB::beginTransaction();
+
+            switch ($action) {
+                case 'delete':
+                    {{ modelClass }}::whereIn('id', $ids)->delete();
+                    $message = count($ids) . ' {{ modelVariablePlural }} deleted successfully.';
+                    break;
+
+                case 'activate':
+                    {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'active']);
+                    $message = count($ids) . ' {{ modelVariablePlural }} activated successfully.';
+                    break;
+
+                case 'deactivate':
+                    {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'inactive']);
+                    $message = count($ids) . ' {{ modelVariablePlural }} deactivated successfully.';
+                    break;
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('{{ routeName }}.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Bulk operation failed: ' . $e->getMessage());
+        }
+    }
+}

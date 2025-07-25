@@ -1,0 +1,53 @@
+@extends('{{layout}}')
+
+@section('title', '{{modelName}} Management')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-content-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{modelName}} Management</h1>
+                    <p class="text-sm text-gray-600 mt-1">Manage your {{modelVariablePlural}}</p>
+                </div>
+                <div class="flex space-x-2">
+                    {{withSearchButton}}
+                    <a href="{{ route('{{routeName}}.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add {{modelName}}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3" role="alert">
+                <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        {{filtersSection}}
+
+        {{tableSection}}
+    </div>
+</div>
+
+{{deleteModal}}
+
+@push('scripts')
+<script>
+{{scripts}}
+</script>
+@endpush
+@endsection

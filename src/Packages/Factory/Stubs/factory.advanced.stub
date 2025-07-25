@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+{{ imports }}
+use {{ modelNamespace }};
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\{{ modelNamespace }}>
+ */
+class {{ factoryClass }} extends Factory
+{
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var string
+     */
+    protected $model = {{ modelClass }}::class;
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function ({{ modelClass }} $model) {
+            // Perform any additional setup after making the model instance
+        })->afterCreating(function ({{ modelClass }} $model) {
+            // Perform any additional setup after creating the model instance
+        });
+    }
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+{{ definition }}
+        ];
+    }
+
+    /**
+     * Create a sequence of models with unique attributes.
+     */
+    public function sequence(...$sequence): static
+    {
+        return $this->state(new \Illuminate\Database\Eloquent\Factories\Sequence(...$sequence));
+    }
+{{ states }}
+{{ relationships }}
+
+    /**
+     * Create a model with random state variations.
+     */
+    public function randomState(): static
+    {
+        $states = ['active', 'inactive']; // Add more states as needed
+        $randomState = $this->faker->randomElement($states);
+        
+        return $this->$randomState();
+    }
+
+    /**
+     * Create a model for testing purposes with predictable data.
+     */
+    public function forTesting(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            // Override with test-friendly values
+        ]);
+    }
+}

@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+{{uses}}
+
+{{classDocBlock}}
+class {{modelName}} extends Model
+{
+    {{traits}}
+
+    {{constants}}
+    
+    {{properties}}
+    
+    protected $fillable = {{fillable}};
+    
+    protected $hidden = {{hidden}};
+    
+    protected function casts(): array
+    {
+        {{casts}}
+    }
+{{relationships}}
+{{scopes}}
+{{accessors}}
+{{mutators}}
+}

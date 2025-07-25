@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{namespace}};
+
+{{uses}}
+use AutoGen\Packages\Model\Traits\AutoGenModelTrait;
+
+{{classDocBlock}}
+class {{modelName}} extends Model
+{
+    use {{traits}}, AutoGenModelTrait;
+
+    {{constants}}
+    
+    {{properties}}
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<string>
+     */
+    protected $fillable = {{fillable}};
+    
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<string>
+     */
+    protected $hidden = {{hidden}};
+    
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        {{casts}}
+    }
+{{relationships}}
+{{scopes}}
+{{accessors}}
+{{mutators}}
+}

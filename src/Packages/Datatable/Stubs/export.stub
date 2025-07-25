@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Events\BeforeExport;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
+class {{ exportName }} implements 
+    FromCollection, 
+    WithHeadings, 
+    WithMapping, 
+    WithStyles, 
+    WithColumnWidths,
+    WithEvents,
+    ShouldAutoSize,
+    WithChunkReading,
+    WithBatchInserts
+{
+    protected Collection $data;
+
+    public function __construct(Collection $data)
+    {
+        $this->data = $data;
+    }
+
+    {{ exportMethods }}
+
+    {{ headings }}
+
+    {{ mapping }}
+
+    {{ styles }}
+
+    {{ memoryOptimization }}
+}

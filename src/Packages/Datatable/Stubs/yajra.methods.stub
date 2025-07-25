@@ -1,0 +1,113 @@
+    /**
+     * Get the data for the datatable.
+     */
+    public function data(Request $request)
+    {
+        $dataTable = new {{ datatableName }}();
+        return $dataTable->ajax();
+    }
+
+    {{ withExports ? "/**
+     * Export data to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        return $this->export($request, 'excel');
+    }
+
+    /**
+     * Export data to CSV.
+     */
+    public function exportCsv(Request $request)
+    {
+        return $this->export($request, 'csv');
+    }
+
+    /**
+     * Export data to PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        return $this->export($request, 'pdf');
+    }
+
+    /**
+     * Handle export functionality.
+     */
+    protected function export(Request $request, string $format)
+    {
+        $query = {{ modelClass }}::query();
+        
+        // Apply same filters as datatable
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', \"%{$search}%\")
+                  ->orWhere('email', 'like', \"%{$search}%\");
+            });
+        }
+        
+        $data = $query->get();
+        
+        " . ($backgroundJobs === 'true' ? "
+        // Process export in background job for large datasets
+        if ($data->count() > 1000) {
+            dispatch(new Export{{ modelClass }}Job($data, $format, auth()->user()));
+            return response()->json(['message' => 'Export job started. You will receive an email when ready.']);
+        }" : "") . "
+
+        return (new {{ modelClass }}Export($data))->download('{{ modelVariablePlural }}.' . $format);
+    }" : "" }}
+
+    {{ withBulk ? "/**
+     * Handle bulk actions.
+     */
+    public function bulk(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|string|in:delete,activate,deactivate',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:{{ tableName }},id'
+        ]);
+
+        $action = $request->get('action');
+        $ids = $request->get('ids');
+        $affectedRows = 0;
+
+        switch ($action) {
+            case 'delete':
+                $affectedRows = {{ modelClass }}::whereIn('id', $ids)->delete();
+                $message = \"{$affectedRows} items deleted successfully\";
+                break;
+                
+            case 'activate':
+                $affectedRows = {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'active']);
+                $message = \"{$affectedRows} items activated successfully\";
+                break;
+                
+            case 'deactivate':
+                $affectedRows = {{ modelClass }}::whereIn('id', $ids)->update(['status' => 'inactive']);
+                $message = \"{$affectedRows} items deactivated successfully\";
+                break;
+        }
+
+        " . ($cache === 'true' ? "// Clear cache after bulk operations
+        Cache::tags(['datatables', '{{ routeName }}'])->flush();" : "") . "
+
+        return response()->json([
+            'message' => $message,
+            'affected_rows' => $affectedRows
+        ]);
+    }" : "" }}
+
+    {{ cache === 'true' ? "/**
+     * Clear datatable cache.
+     */
+    public function clearCache()
+    {
+        Cache::tags(['datatables', '{{ routeName }}'])->flush();
+        
+        return response()->json([
+            'message' => 'Cache cleared successfully'
+        ]);
+    }" : "" }}

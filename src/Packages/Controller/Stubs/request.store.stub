@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Illuminate\Foundation\Http\FormRequest;
+use {{ modelNamespace }}\{{ modelClass }};
+
+class {{ className }} extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true; // Handle authorization in policies or middleware
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     */
+    public function rules(): array
+    {
+        return [
+{{ rules }}
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+{{ messages }}
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     */
+    public function attributes(): array
+    {
+        return [
+{{ attributes }}
+        ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Transform data before validation if needed
+        if ($this->filled('phone')) {
+            $this->merge([
+                'phone' => preg_replace('/[^0-9+]/', '', $this->input('phone')),
+            ]);
+        }
+
+        // Convert empty strings to null for nullable fields
+        foreach ($this->all() as $key => $value) {
+            if ($value === '') {
+                $this->merge([$key => null]);
+            }
+        }
+    }
+
+    /**
+     * Handle a passed validation attempt.
+     */
+    protected function passedValidation(): void
+    {
+        // Additional processing after validation passes
+        parent::passedValidation();
+    }
+
+    /**
+     * Get the validated data with any transformations applied.
+     */
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+
+        if ($key !== null) {
+            return $data;
+        }
+
+        // Apply any final transformations to all validated data
+        if (isset($data['password'])) {
+            $data['password'] = bcrypt($data['password']);
+        }
+
+        return $data;
+    }
+}
