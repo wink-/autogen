@@ -25,20 +25,9 @@ class ViewsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Publish configuration
-        $this->publishes([
-            __DIR__ . '/../../config/autogen-views.php' => config_path('autogen-views.php'),
-        ], 'autogen-views-config');
-
         // Publish stubs
         $this->publishes([
             __DIR__ . '/Stubs' => resource_path('stubs/autogen/views'),
         ], 'autogen-views-stubs');
-
-        // Merge default configuration
-        $this->mergeConfigFrom(
-            __DIR__ . '/../../config/autogen-views.php',
-            'autogen-views'
-        );
     }
 }

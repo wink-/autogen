@@ -13,12 +13,6 @@ class ModelPackageServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Merge configuration
-        $this->mergeConfigFrom(
-            __DIR__ . '/config/autogen.php',
-            'autogen'
-        );
-
         // Register services
         $this->app->singleton(DatabaseIntrospector::class);
         $this->app->singleton(RelationshipAnalyzer::class);
@@ -32,16 +26,11 @@ class ModelPackageServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Publish configuration
         if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/config/autogen.php' => config_path('autogen.php'),
-            ], 'autogen-config');
-
             // Publish stubs
             $this->publishes([
                 __DIR__ . '/Stubs' => resource_path('stubs/autogen/model'),
-            ], 'autogen-stubs');
+            ], 'autogen-model-stubs');
 
             // Register commands
             $this->commands([
