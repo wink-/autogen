@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class InertiaDatatableGenerator
 {
     protected string $modelName;
+
     protected array $options;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, array $options = [])
@@ -27,7 +29,7 @@ class InertiaDatatableGenerator
         $this->generateInertiaController();
         $this->generateVueComponent();
         $this->generateComposables();
-        
+
         return $this->generatedFiles;
     }
 
@@ -42,7 +44,7 @@ class InertiaDatatableGenerator
         $stub = $this->getControllerStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Inertia controller already exists at: {$path}");
         }
 
@@ -61,7 +63,7 @@ class InertiaDatatableGenerator
         $stub = $this->getVueStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Vue component already exists at: {$path}");
         }
 
@@ -80,7 +82,7 @@ class InertiaDatatableGenerator
         $stub = $this->getComposableStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Composable already exists at: {$path}");
         }
 
@@ -94,12 +96,12 @@ class InertiaDatatableGenerator
     protected function getControllerStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/inertia.controller.stub')) {
-            return File::get($customStubPath . '/datatable/inertia.controller.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/inertia.controller.stub')) {
+            return File::get($customStubPath.'/datatable/inertia.controller.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/inertia.controller.stub');
+        return File::get(__DIR__.'/Stubs/inertia.controller.stub');
     }
 
     /**
@@ -108,12 +110,12 @@ class InertiaDatatableGenerator
     protected function getVueStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/inertia.vue.stub')) {
-            return File::get($customStubPath . '/datatable/inertia.vue.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/inertia.vue.stub')) {
+            return File::get($customStubPath.'/datatable/inertia.vue.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/inertia.vue.stub');
+        return File::get(__DIR__.'/Stubs/inertia.vue.stub');
     }
 
     /**
@@ -122,12 +124,12 @@ class InertiaDatatableGenerator
     protected function getComposableStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/inertia.composable.stub')) {
-            return File::get($customStubPath . '/datatable/inertia.composable.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/inertia.composable.stub')) {
+            return File::get($customStubPath.'/datatable/inertia.composable.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/inertia.composable.stub');
+        return File::get(__DIR__.'/Stubs/inertia.composable.stub');
     }
 
     /**
@@ -138,7 +140,7 @@ class InertiaDatatableGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -308,7 +310,7 @@ class InertiaDatatableGenerator
             \$q->addSelect(DB::raw('SQL_CALC_FOUND_ROWS *'));
         });";
 
-        return $optimizations ? '        ' . implode("\n        ", $optimizations) : '';
+        return $optimizations ? '        '.implode("\n        ", $optimizations) : '';
     }
 
     /**
@@ -316,7 +318,7 @@ class InertiaDatatableGenerator
      */
     protected function getCacheQuery(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -335,7 +337,7 @@ class InertiaDatatableGenerator
      */
     protected function getCursorPaginationImplementation(): string
     {
-        if (!($this->options['cursorPagination'] ?? false)) {
+        if (! ($this->options['cursorPagination'] ?? false)) {
             return '';
         }
 
@@ -351,7 +353,7 @@ class InertiaDatatableGenerator
      */
     protected function getExportMethodsImplementation(): string
     {
-        if (!($this->options['withExports'] ?? false)) {
+        if (! ($this->options['withExports'] ?? false)) {
             return '';
         }
 
@@ -394,12 +396,12 @@ class InertiaDatatableGenerator
         
         \$data = \$query->get();
         
-        " . ($this->options['backgroundJobs'] ? "
+        ".($this->options['backgroundJobs'] ? "
         // Process export in background job for large datasets
         if (\$data->count() > 1000) {
             dispatch(new Export{$modelClass}Job(\$data, \$format, auth()->user()));
             return response()->json(['message' => 'Export job started. You will receive an email when ready.']);
-        }" : "") . "
+        }" : '')."
 
         return (new {$modelClass}Export(\$data))->download('{$this->getModelVariable()}s.' . \$format);
     }";
@@ -410,7 +412,7 @@ class InertiaDatatableGenerator
      */
     protected function getBulkMethodsImplementation(): string
     {
-        if (!($this->options['withBulk'] ?? false)) {
+        if (! ($this->options['withBulk'] ?? false)) {
             return '';
         }
 
@@ -468,20 +470,20 @@ class InertiaDatatableGenerator
     <div class="px-4 py-5 sm:p-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 sm:mb-0">
-          ' . Str::title($modelVariablePlural) . '
+          '.Str::title($modelVariablePlural).'
         </h3>
         
         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          ' . ($this->options['withSearch'] ? '
+          '.($this->options['withSearch'] ? '
           <button 
             @click="toggleAdvancedSearch"
             class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Advanced Search
-          </button>' : '') . '
+          </button>' : '').'
           
-          ' . ($this->options['withExports'] ? '
-          <div class="relative inline-block text-left" v-if="' . $modelVariablePlural . '.data.length > 0">
+          '.($this->options['withExports'] ? '
+          <div class="relative inline-block text-left" v-if="'.$modelVariablePlural.'.data.length > 0">
             <button 
               @click="showExportMenu = !showExportMenu"
               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -501,7 +503,7 @@ class InertiaDatatableGenerator
                 </button>
               </div>
             </div>
-          </div>' : '') . '
+          </div>' : '').'
         </div>
       </div>
 
@@ -516,7 +518,7 @@ class InertiaDatatableGenerator
         />
       </div>
 
-      ' . ($this->options['withSearch'] ? '
+      '.($this->options['withSearch'] ? '
       <!-- Advanced Search -->
       <div v-show="showAdvancedSearch" class="bg-gray-50 p-4 rounded-lg mb-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -562,9 +564,9 @@ class InertiaDatatableGenerator
             Clear Filters
           </button>
         </div>
-      </div>' : '') . '
+      </div>' : '').'
 
-      ' . ($this->options['withBulk'] ? '
+      '.($this->options['withBulk'] ? '
       <!-- Bulk Actions -->
       <div v-show="selectedItems.length > 0" class="bg-blue-50 p-4 rounded-lg mb-4">
         <div class="flex items-center justify-between">
@@ -581,17 +583,17 @@ class InertiaDatatableGenerator
             </button>
           </div>
         </div>
-      </div>' : '') . '
+      </div>' : '').'
 
       <!-- Data Table -->
       <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
         <table class="min-w-full divide-y divide-gray-300">
           <thead class="bg-gray-50">
             <tr>
-              ' . ($this->options['withBulk'] ? '
+              '.($this->options['withBulk'] ? '
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" class="rounded">
-              </th>' : '') . '
+              </th>' : '').'
               <th 
                 @click="sort(\'id\')"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -626,26 +628,26 @@ class InertiaDatatableGenerator
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="' . $modelVariable . ' in ' . $modelVariablePlural . '.data" :key="' . $modelVariable . '.id">
-              ' . ($this->options['withBulk'] ? '
+            <tr v-for="'.$modelVariable.' in '.$modelVariablePlural.'.data" :key="'.$modelVariable.'.id">
+              '.($this->options['withBulk'] ? '
               <td class="px-6 py-4 whitespace-nowrap">
-                <input type="checkbox" v-model="selectedItems" :value="' . $modelVariable . '.id" class="rounded">
-              </td>' : '') . '
+                <input type="checkbox" v-model="selectedItems" :value="'.$modelVariable.'.id" class="rounded">
+              </td>' : '').'
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ ' . $modelVariable . '.id }}
+                {{ '.$modelVariable.'.id }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ ' . $modelVariable . '.name }}
+                {{ '.$modelVariable.'.name }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ ' . $modelVariable . '.email }}
+                {{ '.$modelVariable.'.email }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(' . $modelVariable . '.created_at) }}
+                {{ formatDate('.$modelVariable.'.created_at) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                <a href="#" @click.prevent="deleteItem(' . $modelVariable . '.id)" class="text-red-600 hover:text-red-900">Delete</a>
+                <a href="#" @click.prevent="deleteItem('.$modelVariable.'.id)" class="text-red-600 hover:text-red-900">Delete</a>
               </td>
             </tr>
           </tbody>
@@ -654,7 +656,7 @@ class InertiaDatatableGenerator
 
       <!-- Pagination -->
       <div class="mt-4">
-        <Pagination :links="' . $modelVariablePlural . '.links" />
+        <Pagination :links="'.$modelVariablePlural.'.links" />
       </div>
     </div>
   </div>
@@ -675,15 +677,15 @@ import { ref, computed, onMounted, watch } from \'vue\'
 import { router } from \'@inertiajs/vue3\'
 import { debounce } from \'lodash\'
 import Pagination from \'@/Components/Pagination.vue\'
-import { ' . $composableName . ' } from \'@/Composables/' . $composableName . '\'
+import { '.$composableName.' } from \'@/Composables/'.$composableName.'\'
 
 const props = defineProps({
-  ' . $modelVariablePlural . ': Object,
+  '.$modelVariablePlural.': Object,
   filters: Object
 })
 
 const {
-  ' . $modelVariablePlural . ',
+  '.$modelVariablePlural.',
   filters,
   loading,
   selectedItems,
@@ -698,7 +700,7 @@ const {
   exportData,
   deleteItem,
   formatDate
-} = ' . $composableName . '(props.' . $modelVariablePlural . ', props.filters)
+} = '.$composableName.'(props.'.$modelVariablePlural.', props.filters)
 
 const debouncedSearch = debounce(search, 300)
 
@@ -725,8 +727,8 @@ onMounted(() => {
 import { router } from \'@inertiajs/vue3\'
 import axios from \'axios\'
 
-export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialData, initialFilters) {
-  const ' . $modelVariablePlural . ' = ref(initialData)
+export function use'.Str::studly($modelVariablePlural).'Datatable(initialData, initialFilters) {
+  const '.$modelVariablePlural.' = ref(initialData)
   const loading = ref(false)
   const selectedItems = ref([])
   const selectAll = ref(false)
@@ -738,21 +740,21 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     sort: initialFilters.sort || \'id\',
     direction: initialFilters.direction || \'asc\',
     per_page: initialFilters.per_page || 15,
-    ' . ($this->options['withSearch'] ? '
+    '.($this->options['withSearch'] ? '
     name: initialFilters.name || \'\',
     email: initialFilters.email || \'\',
     date_from: initialFilters.date_from || \'\',
-    date_to: initialFilters.date_to || \'\',' : '') . '
+    date_to: initialFilters.date_to || \'\',' : '').'
   })
 
   function search() {
     loading.value = true
     
-    router.get(route(\'' . $routeName . '.index\'), filters, {
+    router.get(route(\''.$routeName.'.index\'), filters, {
       preserveState: true,
       preserveScroll: true,
       onSuccess: (page) => {
-        ' . $modelVariablePlural . '.value = page.props.' . $modelVariablePlural . '
+        '.$modelVariablePlural.'.value = page.props.'.$modelVariablePlural.'
         loading.value = false
       },
       onError: () => {
@@ -763,11 +765,11 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
 
   function clearFilters() {
     filters.search = \'\'
-    ' . ($this->options['withSearch'] ? '
+    '.($this->options['withSearch'] ? '
     filters.name = \'\'
     filters.email = \'\'
     filters.date_from = \'\'
-    filters.date_to = \'\'' : '') . '
+    filters.date_to = \'\'' : '').'
     showAdvancedSearch.value = false
     search()
   }
@@ -782,10 +784,10 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     search()
   }
 
-  ' . ($this->options['withBulk'] ? '
+  '.($this->options['withBulk'] ? '
   function toggleSelectAll() {
     if (selectAll.value) {
-      selectedItems.value = ' . $modelVariablePlural . '.value.data.map(item => item.id)
+      selectedItems.value = '.$modelVariablePlural.'.value.data.map(item => item.id)
     } else {
       selectedItems.value = []
     }
@@ -803,7 +805,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
 
     try {
       loading.value = true
-      await axios.post(route(\'' . $routeName . '.bulk-action\'), {
+      await axios.post(route(\''.$routeName.'.bulk-action\'), {
         action,
         ids: selectedItems.value
       })
@@ -817,15 +819,15 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     } finally {
       loading.value = false
     }
-  }' : '') . '
+  }' : '').'
 
-  ' . ($this->options['withExports'] ? '
+  '.($this->options['withExports'] ? '
   async function exportData(format) {
     try {
       showExportMenu.value = false
       loading.value = true
 
-      const response = await axios.get(route(\'' . $routeName . '.export-\' + format), {
+      const response = await axios.get(route(\''.$routeName.'.export-\' + format), {
         params: filters,
         responseType: \'blob\'
       })
@@ -835,7 +837,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement(\'a\')
       link.href = url
-      link.download = `' . $modelVariablePlural . '.${format}`
+      link.download = `'.$modelVariablePlural.'.${format}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -846,7 +848,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     } finally {
       loading.value = false
     }
-  }' : '') . '
+  }' : '').'
 
   async function deleteItem(id) {
     if (!confirm(\'Are you sure you want to delete this item?\')) {
@@ -855,7 +857,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
 
     try {
       loading.value = true
-      await axios.delete(route(\'' . $routeName . '.destroy\', id))
+      await axios.delete(route(\''.$routeName.'.destroy\', id))
       search()
     } catch (error) {
       console.error(\'Delete failed:\', error)
@@ -876,7 +878,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
   }
 
   return {
-    ' . $modelVariablePlural . ',
+    '.$modelVariablePlural.',
     filters,
     loading,
     selectedItems,
@@ -886,9 +888,9 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     search,
     clearFilters,
     sort,
-    ' . ($this->options['withBulk'] ? 'toggleSelectAll,
-    bulkAction,' : '') . '
-    ' . ($this->options['withExports'] ? 'exportData,' : '') . '
+    '.($this->options['withBulk'] ? 'toggleSelectAll,
+    bulkAction,' : '').'
+    '.($this->options['withExports'] ? 'exportData,' : '').'
     deleteItem,
     formatDate
   }
@@ -930,7 +932,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -947,7 +949,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -958,7 +960,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
      */
     protected function getControllerName(): string
     {
-        return $this->getModelClass() . 'Controller';
+        return $this->getModelClass().'Controller';
     }
 
     /**
@@ -975,7 +977,8 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     protected function getRouteName(): string
     {
         $parts = explode('/', $this->modelName);
-        $names = array_map(fn($part) => Str::kebab($part), $parts);
+        $names = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $names);
     }
 
@@ -984,7 +987,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
      */
     protected function getComponentName(): string
     {
-        return $this->getModelClass() . '/Index';
+        return $this->getModelClass().'/Index';
     }
 
     /**
@@ -992,7 +995,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
      */
     protected function getComposableName(): string
     {
-        return 'use' . Str::studly(Str::plural($this->getModelVariable())) . 'Datatable';
+        return 'use'.Str::studly(Str::plural($this->getModelVariable())).'Datatable';
     }
 
     /**
@@ -1006,10 +1009,10 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getControllerName() . '.php';
+        return $path.'/'.$this->getControllerName().'.php';
     }
 
     /**
@@ -1018,11 +1021,11 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
     protected function getVueComponentPath(): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::studly($part), $parts);
-        
-        $componentPath = resource_path('js/Pages/' . implode('/', $paths));
-        
-        return $componentPath . '/Index.vue';
+        $paths = array_map(fn ($part) => Str::studly($part), $parts);
+
+        $componentPath = resource_path('js/Pages/'.implode('/', $paths));
+
+        return $componentPath.'/Index.vue';
     }
 
     /**
@@ -1030,7 +1033,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
      */
     protected function getComposablePath(): string
     {
-        return resource_path('js/Composables/' . $this->getComposableName() . '.js');
+        return resource_path('js/Composables/'.$this->getComposableName().'.js');
     }
 
     /**
@@ -1038,7 +1041,7 @@ export function use' . Str::studly($modelVariablePlural) . 'Datatable(initialDat
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

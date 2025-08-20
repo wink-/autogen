@@ -20,7 +20,7 @@ class TypeMapper
             'mediumtext' => 'string',
             'longtext' => 'string',
             'string' => 'string',
-            
+
             // Integer types
             'tinyint' => 'int',
             'smallint' => 'int',
@@ -28,29 +28,29 @@ class TypeMapper
             'int' => 'int',
             'integer' => 'int',
             'bigint' => 'int',
-            
+
             // Float types
             'decimal' => 'float',
             'numeric' => 'float',
             'float' => 'float',
             'double' => 'float',
             'real' => 'float',
-            
+
             // Boolean types
             'boolean' => 'bool',
             'bool' => 'bool',
-            
+
             // Date/Time types
             'date' => '\\Carbon\\Carbon',
             'datetime' => '\\Carbon\\Carbon',
             'timestamp' => '\\Carbon\\Carbon',
             'time' => 'string',
             'year' => 'int',
-            
+
             // JSON types
             'json' => 'array',
             'jsonb' => 'array',
-            
+
             // Binary types
             'binary' => 'string',
             'varbinary' => 'string',
@@ -58,7 +58,7 @@ class TypeMapper
             'tinyblob' => 'string',
             'mediumblob' => 'string',
             'longblob' => 'string',
-            
+
             // Other types
             'enum' => 'string',
             'set' => 'array',
@@ -76,30 +76,30 @@ class TypeMapper
             'boolean' => 'boolean',
             'bool' => 'boolean',
             'tinyint' => 'boolean', // Will be overridden for non-(1) tinyints
-            
+
             // Integer types
             'smallint' => 'integer',
             'mediumint' => 'integer',
             'int' => 'integer',
             'integer' => 'integer',
             'bigint' => 'integer',
-            
+
             // Float types
             'decimal' => 'decimal:2',
             'numeric' => 'decimal:2',
             'float' => 'float',
             'double' => 'double',
             'real' => 'float',
-            
+
             // Date/Time types
             'date' => 'date',
             'datetime' => 'datetime',
             'timestamp' => 'datetime',
-            
+
             // JSON types
             'json' => 'array',
             'jsonb' => 'array',
-            
+
             // Collection types
             'set' => 'array',
         ];
@@ -113,7 +113,7 @@ class TypeMapper
         $type = strtolower($column['type']);
         $fullType = strtolower($column['full_type'] ?? $type);
         $typeMap = self::getDatabaseToPhpTypeMap();
-        
+
         // Special handling for tinyint(1) as boolean
         if ($type === 'tinyint') {
             if (isset($column['length']) && $column['length'] == 1) {
@@ -122,9 +122,10 @@ class TypeMapper
             if (str_contains($fullType, '(1)')) {
                 return 'bool';
             }
+
             return 'int';
         }
-        
+
         return $typeMap[$type] ?? 'string';
     }
 
@@ -136,7 +137,7 @@ class TypeMapper
         $type = strtolower($column['type']);
         $fullType = strtolower($column['full_type'] ?? $type);
         $castMap = self::getDatabaseToCastTypeMap();
-        
+
         // Special handling for tinyint(1) as boolean
         if ($type === 'tinyint') {
             if (isset($column['length']) && $column['length'] == 1) {
@@ -145,15 +146,17 @@ class TypeMapper
             if (str_contains($fullType, '(1)')) {
                 return 'boolean';
             }
+
             return 'integer';
         }
-        
+
         // Special handling for decimal with custom precision
         if (in_array($type, ['decimal', 'numeric'])) {
             $scale = $column['scale'] ?? 2;
+
             return "decimal:{$scale}";
         }
-        
+
         return $castMap[$type] ?? null;
     }
 
@@ -171,18 +174,18 @@ class TypeMapper
     public static function getDefaultValue(array $column): mixed
     {
         $defaultValue = $column['default'] ?? null;
-        
+
         if ($defaultValue === null) {
             return null;
         }
-        
+
         $type = strtolower($column['type']);
-        
+
         // Handle special default values
         if (in_array(strtoupper($defaultValue), ['CURRENT_TIMESTAMP', 'NOW()'])) {
             return null; // Let Laravel handle these
         }
-        
+
         // Type-specific default value handling
         switch ($type) {
             case 'boolean':
@@ -191,26 +194,31 @@ class TypeMapper
                 if ($column['length'] == 1) {
                     return (bool) $defaultValue;
                 }
+
                 return (int) $defaultValue;
-                
+
             case 'smallint':
             case 'mediumint':
             case 'int':
             case 'integer':
             case 'bigint':
                 return (int) $defaultValue;
-                
+
             case 'decimal':
             case 'numeric':
             case 'float':
             case 'double':
             case 'real':
                 return (float) $defaultValue;
-                
+
             case 'json':
             case 'jsonb':
-                return json_decode($defaultValue, true);
-                
+                try {
+                    return json_decode($defaultValue, true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    return null; // Return null for invalid JSON
+                }
+
             default:
                 // Remove quotes from string defaults
                 return trim($defaultValue, "'\"");
@@ -240,7 +248,7 @@ class TypeMapper
     {
         $columnName = strtolower($column['name']);
         $type = strtolower($column['type']);
-        
+
         // Column name-based mappings
         $nameBasedMethods = [
             'email' => 'safeEmail()',
@@ -280,14 +288,14 @@ class TypeMapper
             'birthday' => 'date()',
             'birth_date' => 'date()',
         ];
-        
+
         // Check for name-based matches first
         foreach ($nameBasedMethods as $pattern => $method) {
             if (str_contains($columnName, $pattern)) {
                 return $method;
             }
         }
-        
+
         // Type-based mappings
         return match ($type) {
             'boolean', 'bool' => 'boolean()',

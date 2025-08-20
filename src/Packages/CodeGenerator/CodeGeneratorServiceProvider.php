@@ -14,7 +14,7 @@ class CodeGeneratorServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/code-generator.php',
+            __DIR__.'/config/code-generator.php',
             'autogen.code-generator'
         );
     }
@@ -26,7 +26,7 @@ class CodeGeneratorServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/code-generator.php' => config_path('autogen/code-generator.php'),
+                __DIR__.'/config/code-generator.php' => config_path('autogen/code-generator.php'),
             ], 'autogen-code-generator-config');
         }
     }

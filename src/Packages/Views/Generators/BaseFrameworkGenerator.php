@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace AutoGen\Packages\Views\Generators;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 abstract class BaseFrameworkGenerator
 {
     protected array $columns;
+
     protected array $fillableFields;
+
     protected string $primaryKey;
+
     protected string $tableName;
+
     protected array $casts;
+
     protected array $columnTypes;
 
     public function __construct(
@@ -36,11 +41,11 @@ abstract class BaseFrameworkGenerator
         $this->primaryKey = $this->modelInstance->getKeyName();
         $this->tableName = $this->modelInstance->getTable();
         $this->casts = $this->modelInstance->getCasts();
-        
+
         // Get column information
         $this->columns = Schema::getColumnListing($this->tableName);
         $this->columnTypes = [];
-        
+
         foreach ($this->columns as $column) {
             $this->columnTypes[$column] = Schema::getColumnType($this->tableName, $column);
         }
@@ -67,7 +72,7 @@ abstract class BaseFrameworkGenerator
 
         // Check column type
         $columnType = $this->columnTypes[$field] ?? 'string';
-        
+
         return match ($columnType) {
             'integer', 'bigint', 'smallint' => 'number',
             'decimal', 'float', 'double' => 'number',
@@ -84,7 +89,7 @@ abstract class BaseFrameworkGenerator
     protected function guessFieldTypeByName(string $field): string
     {
         $field = strtolower($field);
-        
+
         return match (true) {
             str_contains($field, 'email') => 'email',
             str_contains($field, 'password') => 'password',
@@ -106,7 +111,7 @@ abstract class BaseFrameworkGenerator
     {
         $label = $this->getFieldLabel($field);
         $type = $this->getFieldType($field);
-        
+
         return match ($type) {
             'email' => 'example@domain.com',
             'url' => 'https://example.com',
@@ -123,18 +128,18 @@ abstract class BaseFrameworkGenerator
     {
         // This is a simplified check. In a real implementation,
         // you would check validation rules from the FormRequest
-        return !in_array($field, ['description', 'notes', 'bio', 'content', 'body']);
+        return ! in_array($field, ['description', 'notes', 'bio', 'content', 'body']);
     }
 
     protected function getValidationAttributes(string $field): array
     {
         $attrs = [];
         $type = $this->getFieldType($field);
-        
+
         if ($this->isRequiredField($field)) {
             $attrs[] = 'required';
         }
-        
+
         // Add field-specific validation
         switch ($type) {
             case 'email':
@@ -150,7 +155,7 @@ abstract class BaseFrameworkGenerator
                 }
                 break;
         }
-        
+
         // Add max length for text fields
         if (in_array($type, ['text', 'email', 'url', 'tel'])) {
             $maxLength = $this->getMaxLength($field);
@@ -158,7 +163,7 @@ abstract class BaseFrameworkGenerator
                 $attrs[] = "maxlength=\"{$maxLength}\"";
             }
         }
-        
+
         return $attrs;
     }
 
@@ -177,32 +182,32 @@ abstract class BaseFrameworkGenerator
     {
         // Skip certain fields in table view
         $skipFields = [
-            'password', 
-            'remember_token', 
+            'password',
+            'remember_token',
             'email_verified_at',
             'created_at',
             'updated_at',
-            'deleted_at'
+            'deleted_at',
         ];
-        
-        return !in_array($field, $skipFields);
+
+        return ! in_array($field, $skipFields);
     }
 
     protected function getTableColumns(): array
     {
         $columns = [$this->primaryKey];
-        
+
         foreach ($this->fillableFields as $field) {
             if ($this->shouldShowInTable($field)) {
                 $columns[] = $field;
             }
         }
-        
+
         // Add timestamps if they exist
         if (in_array('created_at', $this->columns)) {
             $columns[] = 'created_at';
         }
-        
+
         return array_slice($columns, 0, 6); // Limit to 6 columns for readability
     }
 

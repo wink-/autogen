@@ -4,37 +4,69 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Model;
 
+use AutoGen\Common\Performance\PerformanceMonitor;
+use AutoGen\Common\Performance\SchemaCache;
+use AutoGen\Common\Performance\QueryOptimizer;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Connection;
 
 class DatabaseIntrospector
 {
+    protected PerformanceMonitor $performanceMonitor;
+    protected SchemaCache $schemaCache;
+    protected QueryOptimizer $queryOptimizer;
+
+    public function __construct(
+        PerformanceMonitor $performanceMonitor,
+        SchemaCache $schemaCache,
+        QueryOptimizer $queryOptimizer
+    ) {
+        $this->performanceMonitor = $performanceMonitor;
+        $this->schemaCache = $schemaCache;
+        $this->queryOptimizer = $queryOptimizer;
+    }
     /**
      * Get all tables from the database connection.
      */
     public function getTables(string $connection): array
     {
-        $tables = [];
-        $db = DB::connection($connection);
-        
-        switch ($db->getDriverName()) {
-            case 'mysql':
-            case 'mariadb':
-                $tables = $this->getMySqlTables($db);
-                break;
-            case 'pgsql':
-                $tables = $this->getPostgresTables($db);
-                break;
-            case 'sqlite':
-                $tables = $this->getSqliteTables($db);
-                break;
-            case 'sqlsrv':
-                $tables = $this->getSqlServerTables($db);
-                break;
+        $operationId = $this->performanceMonitor->startOperation('get_tables', [
+            'connection' => $connection
+        ]);
+
+        try {
+            // Try to get from schema cache first
+            $schemas = $this->schemaCache->getAllTablesSchema($connection);
+            
+            if (!empty($schemas)) {
+                return array_keys($schemas);
+            }
+
+            // Fallback to database introspection
+            $tables = [];
+            $db = DB::connection($connection);
+
+            switch ($db->getDriverName()) {
+                case 'mysql':
+                case 'mariadb':
+                    $tables = $this->getMySqlTables($db);
+                    break;
+                case 'pgsql':
+                    $tables = $this->getPostgresTables($db);
+                    break;
+                case 'sqlite':
+                    $tables = $this->getSqliteTables($db);
+                    break;
+                case 'sqlsrv':
+                    $tables = $this->getSqlServerTables($db);
+                    break;
+            }
+
+            return $tables;
+        } finally {
+            $this->performanceMonitor->endOperation($operationId);
         }
-        
-        return $tables;
     }
 
     /**
@@ -42,20 +74,43 @@ class DatabaseIntrospector
      */
     public function introspectTable(string $connection, string $table): array
     {
-        $db = DB::connection($connection);
-        $schema = Schema::connection($connection);
-        
-        $structure = [
-            'name' => $table,
-            'columns' => $this->getColumns($connection, $table),
+        $operationId = $this->performanceMonitor->startOperation('introspect_table', [
+            'connection' => $connection,
+            'table' => $table
+        ]);
+
+        try {
+            // Try to get from schema cache first
+            $cachedSchema = $this->schemaCache->getTableSchema($connection, $table);
+            
+            if ($cachedSchema) {
+                return $cachedSchema;
+            }
+
+            // Fallback to database introspection
+            $db = DB::connection($connection);
+            $schema = Schema::connection($connection);
+
+            $structure = [
+                'name' => $table,
+                'columns' => $this->getColumns($connection, $table),
             'indexes' => $this->getIndexes($connection, $table),
             'primary_key' => $this->getPrimaryKey($connection, $table),
             'foreign_keys' => $this->getForeignKeys($connection, $table),
             'has_timestamps' => $this->hasTimestamps($connection, $table),
             'has_soft_deletes' => $this->hasSoftDeletes($connection, $table),
         ];
-        
-        return $structure;
+
+            // Cache the result
+            if (!empty($structure)) {
+                // The SchemaCache will handle caching internally
+                $this->schemaCache->getTableSchema($connection, $table);
+            }
+
+            return $structure;
+        } finally {
+            $this->performanceMonitor->endOperation($operationId);
+        }
     }
 
     /**
@@ -65,7 +120,7 @@ class DatabaseIntrospector
     {
         $columns = [];
         $db = DB::connection($connection);
-        
+
         switch ($db->getDriverName()) {
             case 'mysql':
             case 'mariadb':
@@ -81,7 +136,7 @@ class DatabaseIntrospector
                 $columns = $this->getSqlServerColumns($db, $table);
                 break;
         }
-        
+
         return $columns;
     }
 
@@ -92,7 +147,7 @@ class DatabaseIntrospector
     {
         $indexes = [];
         $db = DB::connection($connection);
-        
+
         switch ($db->getDriverName()) {
             case 'mysql':
             case 'mariadb':
@@ -108,7 +163,7 @@ class DatabaseIntrospector
                 $indexes = $this->getSqlServerIndexes($db, $table);
                 break;
         }
-        
+
         return $indexes;
     }
 
@@ -118,7 +173,7 @@ class DatabaseIntrospector
     public function getPrimaryKey(string $connection, string $table): ?array
     {
         $db = DB::connection($connection);
-        
+
         switch ($db->getDriverName()) {
             case 'mysql':
             case 'mariadb':
@@ -130,7 +185,7 @@ class DatabaseIntrospector
             case 'sqlsrv':
                 return $this->getSqlServerPrimaryKey($db, $table);
         }
-        
+
         return null;
     }
 
@@ -141,7 +196,7 @@ class DatabaseIntrospector
     {
         $foreignKeys = [];
         $db = DB::connection($connection);
-        
+
         switch ($db->getDriverName()) {
             case 'mysql':
             case 'mariadb':
@@ -157,7 +212,7 @@ class DatabaseIntrospector
                 $foreignKeys = $this->getSqlServerForeignKeys($db, $table);
                 break;
         }
-        
+
         return $foreignKeys;
     }
 
@@ -168,7 +223,7 @@ class DatabaseIntrospector
     {
         $columns = $this->getColumns($connection, $table);
         $columnNames = array_column($columns, 'name');
-        
+
         return in_array('created_at', $columnNames) && in_array('updated_at', $columnNames);
     }
 
@@ -179,12 +234,12 @@ class DatabaseIntrospector
     {
         $columns = $this->getColumns($connection, $table);
         $columnNames = array_column($columns, 'name');
-        
+
         return in_array('deleted_at', $columnNames);
     }
 
     // MySQL/MariaDB specific methods
-    
+
     protected function getMySqlTables(Connection $db): array
     {
         $database = $db->getDatabaseName();
@@ -194,14 +249,14 @@ class DatabaseIntrospector
             WHERE TABLE_SCHEMA = ? 
             AND TABLE_TYPE = 'BASE TABLE'
         ", [$database]);
-        
+
         return array_column($results, 'TABLE_NAME');
     }
 
     protected function getMySqlColumns(Connection $db, string $table): array
     {
         $database = $db->getDatabaseName();
-        $results = $db->select("
+        $results = $db->select('
             SELECT 
                 COLUMN_NAME as name,
                 DATA_TYPE as type,
@@ -217,8 +272,8 @@ class DatabaseIntrospector
             WHERE TABLE_SCHEMA = ?
             AND TABLE_NAME = ?
             ORDER BY ORDINAL_POSITION
-        ", [$database, $table]);
-        
+        ', [$database, $table]);
+
         return array_map(function ($column) {
             return [
                 'name' => $column->name,
@@ -251,12 +306,12 @@ class DatabaseIntrospector
             AND INDEX_NAME != 'PRIMARY'
             GROUP BY INDEX_NAME, NON_UNIQUE, INDEX_TYPE
         ", [$database, $table]);
-        
+
         return array_map(function ($index) {
             return [
                 'name' => $index->name,
                 'columns' => explode(',', $index->columns),
-                'unique' => !$index->non_unique,
+                'unique' => ! $index->non_unique,
                 'type' => $index->type,
             ];
         }, $results);
@@ -273,13 +328,13 @@ class DatabaseIntrospector
             AND CONSTRAINT_NAME = 'PRIMARY'
             ORDER BY ORDINAL_POSITION
         ", [$database, $table]);
-        
+
         if (empty($results)) {
             return null;
         }
-        
+
         $columns = array_column($results, 'name');
-        
+
         return [
             'columns' => $columns,
             'composite' => count($columns) > 1,
@@ -289,7 +344,7 @@ class DatabaseIntrospector
     protected function getMySqlForeignKeys(Connection $db, string $table): array
     {
         $database = $db->getDatabaseName();
-        $results = $db->select("
+        $results = $db->select('
             SELECT 
                 kcu.CONSTRAINT_NAME as name,
                 kcu.COLUMN_NAME as column_name,
@@ -304,8 +359,8 @@ class DatabaseIntrospector
             WHERE kcu.TABLE_SCHEMA = ?
             AND kcu.TABLE_NAME = ?
             AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
-        ", [$database, $table]);
-        
+        ', [$database, $table]);
+
         return array_map(function ($fk) {
             return [
                 'name' => $fk->name,
@@ -319,7 +374,7 @@ class DatabaseIntrospector
     }
 
     // PostgreSQL specific methods
-    
+
     protected function getPostgresTables(Connection $db): array
     {
         $results = $db->select("
@@ -327,7 +382,7 @@ class DatabaseIntrospector
             FROM pg_tables
             WHERE schemaname = 'public'
         ");
-        
+
         return array_column($results, 'table_name');
     }
 
@@ -347,7 +402,7 @@ class DatabaseIntrospector
             AND table_name = ?
             ORDER BY ordinal_position
         ", [$table]);
-        
+
         return array_map(function ($column) {
             return [
                 'name' => $column->name,
@@ -364,7 +419,7 @@ class DatabaseIntrospector
 
     protected function getPostgresIndexes(Connection $db, string $table): array
     {
-        $results = $db->select("
+        $results = $db->select('
             SELECT 
                 i.relname as name,
                 array_agg(a.attname ORDER BY x.n) as columns,
@@ -379,8 +434,8 @@ class DatabaseIntrospector
             WHERE t.relname = ?
             AND NOT ix.indisprimary
             GROUP BY i.relname, ix.indisunique, am.amname
-        ", [$table]);
-        
+        ', [$table]);
+
         return array_map(function ($index) {
             return [
                 'name' => $index->name,
@@ -393,7 +448,7 @@ class DatabaseIntrospector
 
     protected function getPostgresPrimaryKey(Connection $db, string $table): ?array
     {
-        $results = $db->select("
+        $results = $db->select('
             SELECT a.attname as name
             FROM pg_index i
             JOIN pg_class c ON c.oid = i.indrelid
@@ -402,14 +457,14 @@ class DatabaseIntrospector
             WHERE c.relname = ?
             AND i.indisprimary
             ORDER BY k.n
-        ", [$table]);
-        
+        ', [$table]);
+
         if (empty($results)) {
             return null;
         }
-        
+
         $columns = array_column($results, 'name');
-        
+
         return [
             'columns' => $columns,
             'composite' => count($columns) > 1,
@@ -439,7 +494,7 @@ class DatabaseIntrospector
             WHERE tc.constraint_type = 'FOREIGN KEY'
             AND tc.table_name = ?
         ", [$table]);
-        
+
         return array_map(function ($fk) {
             return [
                 'name' => $fk->name,
@@ -453,7 +508,7 @@ class DatabaseIntrospector
     }
 
     // SQLite specific methods
-    
+
     protected function getSqliteTables(Connection $db): array
     {
         $results = $db->select("
@@ -462,19 +517,19 @@ class DatabaseIntrospector
             WHERE type = 'table'
             AND name NOT LIKE 'sqlite_%'
         ");
-        
+
         return array_column($results, 'table_name');
     }
 
     protected function getSqliteColumns(Connection $db, string $table): array
     {
         $results = $db->select("PRAGMA table_info({$table})");
-        
+
         return array_map(function ($column) {
             return [
                 'name' => $column->name,
                 'type' => strtolower($column->type),
-                'nullable' => !$column->notnull,
+                'nullable' => ! $column->notnull,
                 'default' => $column->dflt_value,
                 'primary_key' => (bool) $column->pk,
             ];
@@ -485,14 +540,14 @@ class DatabaseIntrospector
     {
         $indexes = [];
         $indexList = $db->select("PRAGMA index_list({$table})");
-        
+
         foreach ($indexList as $index) {
             if ($index->origin === 'pk') {
                 continue; // Skip primary key index
             }
-            
+
             $columns = $db->select("PRAGMA index_info({$index->name})");
-            
+
             $indexes[] = [
                 'name' => $index->name,
                 'columns' => array_column($columns, 'name'),
@@ -500,22 +555,22 @@ class DatabaseIntrospector
                 'type' => 'BTREE',
             ];
         }
-        
+
         return $indexes;
     }
 
     protected function getSqlitePrimaryKey(Connection $db, string $table): ?array
     {
         $columns = $db->select("PRAGMA table_info({$table})");
-        $primaryColumns = array_filter($columns, fn($col) => $col->pk > 0);
-        
+        $primaryColumns = array_filter($columns, fn ($col) => $col->pk > 0);
+
         if (empty($primaryColumns)) {
             return null;
         }
-        
-        usort($primaryColumns, fn($a, $b) => $a->pk <=> $b->pk);
+
+        usort($primaryColumns, fn ($a, $b) => $a->pk <=> $b->pk);
         $columnNames = array_column($primaryColumns, 'name');
-        
+
         return [
             'columns' => $columnNames,
             'composite' => count($columnNames) > 1,
@@ -525,7 +580,7 @@ class DatabaseIntrospector
     protected function getSqliteForeignKeys(Connection $db, string $table): array
     {
         $results = $db->select("PRAGMA foreign_key_list({$table})");
-        
+
         return array_map(function ($fk) {
             return [
                 'name' => "fk_{$fk->id}",
@@ -539,7 +594,7 @@ class DatabaseIntrospector
     }
 
     // SQL Server specific methods
-    
+
     protected function getSqlServerTables(Connection $db): array
     {
         $results = $db->select("
@@ -548,7 +603,7 @@ class DatabaseIntrospector
             WHERE TABLE_TYPE = 'BASE TABLE'
             AND TABLE_SCHEMA = 'dbo'
         ");
-        
+
         return array_column($results, 'TABLE_NAME');
     }
 
@@ -569,7 +624,7 @@ class DatabaseIntrospector
             AND c.TABLE_SCHEMA = 'dbo'
             ORDER BY c.ORDINAL_POSITION
         ", [$table]);
-        
+
         return array_map(function ($column) {
             return [
                 'name' => $column->name,
@@ -599,7 +654,7 @@ class DatabaseIntrospector
             AND i.is_primary_key = 0
             GROUP BY i.name, i.is_unique, i.type_desc
         ", [$table]);
-        
+
         return array_map(function ($index) {
             return [
                 'name' => $index->name,
@@ -612,7 +667,7 @@ class DatabaseIntrospector
 
     protected function getSqlServerPrimaryKey(Connection $db, string $table): ?array
     {
-        $results = $db->select("
+        $results = $db->select('
             SELECT c.name
             FROM sys.indexes i
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
@@ -620,14 +675,14 @@ class DatabaseIntrospector
             WHERE OBJECT_NAME(i.object_id) = ?
             AND i.is_primary_key = 1
             ORDER BY ic.key_ordinal
-        ", [$table]);
-        
+        ', [$table]);
+
         if (empty($results)) {
             return null;
         }
-        
+
         $columns = array_column($results, 'name');
-        
+
         return [
             'columns' => $columns,
             'composite' => count($columns) > 1,
@@ -636,7 +691,7 @@ class DatabaseIntrospector
 
     protected function getSqlServerForeignKeys(Connection $db, string $table): array
     {
-        $results = $db->select("
+        $results = $db->select('
             SELECT 
                 fk.name,
                 COL_NAME(fkc.parent_object_id, fkc.parent_column_id) as column_name,
@@ -647,8 +702,8 @@ class DatabaseIntrospector
             FROM sys.foreign_keys fk
             JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
             WHERE OBJECT_NAME(fk.parent_object_id) = ?
-        ", [$table]);
-        
+        ', [$table]);
+
         return array_map(function ($fk) {
             return [
                 'name' => $fk->name,

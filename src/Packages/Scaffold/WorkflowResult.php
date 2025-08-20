@@ -8,64 +8,46 @@ class WorkflowResult
 {
     /**
      * Result status.
-     *
-     * @var string
      */
     protected string $status;
 
     /**
      * Configuration that was executed.
-     *
-     * @var array
      */
     protected array $configuration;
 
     /**
      * Generated files.
-     *
-     * @var array
      */
     protected array $generatedFiles;
 
     /**
      * Skipped files.
-     *
-     * @var array
      */
     protected array $skippedFiles;
 
     /**
      * Error messages.
-     *
-     * @var array
      */
     protected array $errors;
 
     /**
      * Warning messages.
-     *
-     * @var array
      */
     protected array $warnings;
 
     /**
      * Result message.
-     *
-     * @var string
      */
     protected string $message;
 
     /**
      * Execution statistics.
-     *
-     * @var array
      */
     protected array $statistics;
 
     /**
      * Partial files (for rollback).
-     *
-     * @var array
      */
     protected array $partialFiles;
 
@@ -73,7 +55,9 @@ class WorkflowResult
      * Result constants.
      */
     public const STATUS_SUCCESS = 'success';
+
     public const STATUS_PARTIAL_SUCCESS = 'partial_success';
+
     public const STATUS_FAILURE = 'failure';
 
     /**
@@ -214,7 +198,7 @@ class WorkflowResult
      */
     public function hasPartialSuccess(): bool
     {
-        return !empty($this->partialFiles) || $this->isPartialSuccess();
+        return ! empty($this->partialFiles) || $this->isPartialSuccess();
     }
 
     /**
@@ -342,7 +326,7 @@ class WorkflowResult
      */
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 
     /**
@@ -350,7 +334,7 @@ class WorkflowResult
      */
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings);
+        return ! empty($this->warnings);
     }
 
     /**
@@ -374,7 +358,7 @@ class WorkflowResult
      */
     public function addGeneratedFile(string $file): void
     {
-        if (!in_array($file, $this->generatedFiles)) {
+        if (! in_array($file, $this->generatedFiles)) {
             $this->generatedFiles[] = $file;
         }
     }
@@ -384,7 +368,7 @@ class WorkflowResult
      */
     public function addSkippedFile(string $file): void
     {
-        if (!in_array($file, $this->skippedFiles)) {
+        if (! in_array($file, $this->skippedFiles)) {
             $this->skippedFiles[] = $file;
         }
     }
@@ -419,11 +403,11 @@ class WorkflowResult
     protected function calculateSuccessRate(): float
     {
         $total = $this->getTotalFileCount();
-        
+
         if ($total === 0) {
             return 0.0;
         }
-        
+
         return ($this->getGeneratedFileCount() / $total) * 100;
     }
 
@@ -507,7 +491,7 @@ class WorkflowResult
      */
     public function shouldRollback(): bool
     {
-        return $this->isFailure() && (!empty($this->generatedFiles) || !empty($this->partialFiles));
+        return $this->isFailure() && (! empty($this->generatedFiles) || ! empty($this->partialFiles));
     }
 
     /**
@@ -515,13 +499,13 @@ class WorkflowResult
      */
     public function getRollbackInstructions(): array
     {
-        if (!$this->shouldRollback()) {
+        if (! $this->shouldRollback()) {
             return [];
         }
 
         $instructions = [];
-        
-        if (!empty($this->generatedFiles) || !empty($this->partialFiles)) {
+
+        if (! empty($this->generatedFiles) || ! empty($this->partialFiles)) {
             $instructions[] = 'Run with --rollback to clean up generated files';
         }
 
@@ -589,7 +573,7 @@ class WorkflowResult
             array_merge($this->skippedFiles, $other->skippedFiles),
             array_merge($this->errors, $other->errors),
             array_merge($this->warnings, $other->warnings),
-            $this->message . ($other->message ? "\n" . $other->message : ''),
+            $this->message.($other->message ? "\n".$other->message : ''),
             array_merge($this->statistics, $other->statistics),
             array_merge($this->partialFiles, $other->partialFiles)
         );

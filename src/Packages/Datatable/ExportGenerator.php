@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class ExportGenerator
 {
     protected string $modelName;
+
     protected array $options;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, array $options = [])
@@ -25,12 +27,12 @@ class ExportGenerator
     public function generate(): array
     {
         $this->generateExportClass();
-        
+
         if ($this->options['backgroundJobs'] ?? false) {
             $this->generateExportJob();
             $this->generateExportNotification();
         }
-        
+
         return $this->generatedFiles;
     }
 
@@ -45,7 +47,7 @@ class ExportGenerator
         $stub = $this->getExportStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Export class already exists at: {$path}");
         }
 
@@ -64,7 +66,7 @@ class ExportGenerator
         $stub = $this->getExportJobStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Export job already exists at: {$path}");
         }
 
@@ -83,7 +85,7 @@ class ExportGenerator
         $stub = $this->getExportNotificationStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Export notification already exists at: {$path}");
         }
 
@@ -97,12 +99,12 @@ class ExportGenerator
     protected function getExportStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/export.stub')) {
-            return File::get($customStubPath . '/datatable/export.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/export.stub')) {
+            return File::get($customStubPath.'/datatable/export.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/export.stub');
+        return File::get(__DIR__.'/Stubs/export.stub');
     }
 
     /**
@@ -111,12 +113,12 @@ class ExportGenerator
     protected function getExportJobStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/export.job.stub')) {
-            return File::get($customStubPath . '/datatable/export.job.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/export.job.stub')) {
+            return File::get($customStubPath.'/datatable/export.job.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/export.job.stub');
+        return File::get(__DIR__.'/Stubs/export.job.stub');
     }
 
     /**
@@ -125,12 +127,12 @@ class ExportGenerator
     protected function getExportNotificationStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/export.notification.stub')) {
-            return File::get($customStubPath . '/datatable/export.notification.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/export.notification.stub')) {
+            return File::get($customStubPath.'/datatable/export.notification.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/export.notification.stub');
+        return File::get(__DIR__.'/Stubs/export.notification.stub');
     }
 
     /**
@@ -141,7 +143,7 @@ class ExportGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -537,7 +539,7 @@ class ExportGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -554,7 +556,7 @@ class ExportGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -571,7 +573,7 @@ class ExportGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -588,7 +590,7 @@ class ExportGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -599,7 +601,7 @@ class ExportGenerator
      */
     protected function getExportName(): string
     {
-        return $this->getModelClass() . 'Export';
+        return $this->getModelClass().'Export';
     }
 
     /**
@@ -607,7 +609,7 @@ class ExportGenerator
      */
     protected function getJobName(): string
     {
-        return 'Export' . $this->getModelClass() . 'Job';
+        return 'Export'.$this->getModelClass().'Job';
     }
 
     /**
@@ -615,7 +617,7 @@ class ExportGenerator
      */
     protected function getNotificationName(): string
     {
-        return $this->getModelClass() . 'ExportCompleted';
+        return $this->getModelClass().'ExportCompleted';
     }
 
     /**
@@ -637,10 +639,10 @@ class ExportGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getExportName() . '.php';
+        return $path.'/'.$this->getExportName().'.php';
     }
 
     /**
@@ -654,10 +656,10 @@ class ExportGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getJobName() . '.php';
+        return $path.'/'.$this->getJobName().'.php';
     }
 
     /**
@@ -671,10 +673,10 @@ class ExportGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getNotificationName() . '.php';
+        return $path.'/'.$this->getNotificationName().'.php';
     }
 
     /**
@@ -682,7 +684,7 @@ class ExportGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

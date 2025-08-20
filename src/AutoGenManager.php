@@ -8,11 +8,16 @@ use AutoGen\Common\AI\AIProviderManager;
 use AutoGen\Common\Analysis\CodeAnalyzer;
 use AutoGen\Common\Formatting\CodeFormatter;
 use AutoGen\Common\Templates\TemplateEngine;
+use AutoGen\Common\Performance\PerformanceMonitor;
+use AutoGen\Common\Performance\SchemaCache;
+use AutoGen\Common\Performance\TemplateCache;
+use AutoGen\Common\Performance\QueryOptimizer;
+use AutoGen\Common\Performance\LazyLoader;
 use Illuminate\Contracts\Container\Container;
 
 /**
  * AutoGen Manager
- * 
+ *
  * Central manager for the AutoGen package suite providing
  * access to all core services and utilities.
  */
@@ -64,6 +69,46 @@ class AutoGenManager
     }
 
     /**
+     * Get the performance monitor.
+     */
+    public function performance(): PerformanceMonitor
+    {
+        return $this->app->make(PerformanceMonitor::class);
+    }
+
+    /**
+     * Get the schema cache.
+     */
+    public function schemaCache(): SchemaCache
+    {
+        return $this->app->make(SchemaCache::class);
+    }
+
+    /**
+     * Get the template cache.
+     */
+    public function templateCache(): TemplateCache
+    {
+        return $this->app->make(TemplateCache::class);
+    }
+
+    /**
+     * Get the query optimizer.
+     */
+    public function queryOptimizer(): QueryOptimizer
+    {
+        return $this->app->make(QueryOptimizer::class);
+    }
+
+    /**
+     * Get the lazy loader.
+     */
+    public function lazyLoader(): LazyLoader
+    {
+        return $this->app->make(LazyLoader::class);
+    }
+
+    /**
      * Get package information.
      */
     public function getPackageInfo(): array
@@ -84,14 +129,32 @@ class AutoGenManager
      */
     public function getVersion(): string
     {
-        $composerFile = __DIR__ . '/../composer.json';
-        
-        if (file_exists($composerFile)) {
-            $composer = json_decode(file_get_contents($composerFile), true);
-            return $composer['version'] ?? '1.0.0';
+        $composerFile = __DIR__.'/../composer.json';
+
+        if (! file_exists($composerFile)) {
+            return '1.0.0';
         }
 
-        return '1.0.0';
+        if (! is_readable($composerFile)) {
+            return '1.0.0';
+        }
+
+        try {
+            $content = file_get_contents($composerFile);
+            if ($content === false) {
+                return '1.0.0';
+            }
+
+            $composer = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+
+            if (! is_array($composer)) {
+                return '1.0.0';
+            }
+
+            return $composer['version'] ?? '1.0.0';
+        } catch (\JsonException|\Exception) {
+            return '1.0.0';
+        }
     }
 
     /**
@@ -147,7 +210,7 @@ class AutoGenManager
     public function getEnabledPackages(): array
     {
         $packages = config('autogen.packages', []);
-        
+
         return array_filter($packages, function ($config) {
             return $config['enabled'] ?? false;
         });
@@ -195,7 +258,7 @@ class AutoGenManager
         $providers = $this->getAIProviders();
         $defaultProvider = $this->getDefaultAIProvider();
 
-        return !empty($providers[$defaultProvider]['api_key']);
+        return ! empty($providers[$defaultProvider]['api_key']);
     }
 
     /**
@@ -222,13 +285,13 @@ class AutoGenManager
         try {
             // Clear schema cache
             cache()->tags(['autogen', 'schema'])->flush();
-            
+
             // Clear template cache
             cache()->tags(['autogen', 'templates'])->flush();
-            
+
             // Clear AI response cache
             cache()->tags(['autogen', 'ai'])->flush();
-            
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -245,6 +308,9 @@ class AutoGenManager
             'template_cache_size' => cache()->tags(['autogen', 'templates'])->get('size', 0),
             'ai_cache_size' => cache()->tags(['autogen', 'ai'])->get('size', 0),
             'total_cached_items' => cache()->tags(['autogen'])->get('count', 0),
+            'performance_metrics' => $this->performance()->getMetrics(),
+            'template_cache_stats' => $this->templateCache()->getCacheStats(),
+            'schema_cache_stats' => $this->schemaCache()->getCacheStats(),
         ];
     }
 
@@ -286,7 +352,7 @@ class AutoGenManager
     {
         $requirements = $this->getSystemRequirements();
         $connections = $this->getDatabaseConnections();
-        
+
         $status = [
             'overall' => 'healthy',
             'requirements' => 'pass',
@@ -327,7 +393,7 @@ class AutoGenManager
         // Check cache
         try {
             cache()->put('autogen_health_check', true, 60);
-            if (!cache()->get('autogen_health_check')) {
+            if (! cache()->get('autogen_health_check')) {
                 $status['cache'] = 'fail';
                 $status['overall'] = 'degraded';
                 $status['issues'][] = 'Cache system not working';
@@ -335,7 +401,7 @@ class AutoGenManager
         } catch (\Exception $e) {
             $status['cache'] = 'fail';
             $status['overall'] = 'degraded';
-            $status['issues'][] = 'Cache system error: ' . $e->getMessage();
+            $status['issues'][] = 'Cache system error: '.$e->getMessage();
         }
 
         return $status;

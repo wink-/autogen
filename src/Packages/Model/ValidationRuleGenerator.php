@@ -62,22 +62,22 @@ class ValidationRuleGenerator
         $rules = [];
         $primaryKey = $tableStructure['primary_key']['columns'][0] ?? null;
         $timestampColumns = ['created_at', 'updated_at', 'deleted_at'];
-        
+
         foreach ($tableStructure['columns'] as $column) {
             $columnName = $column['name'];
-            
+
             // Skip primary key and timestamp columns
             if ($columnName === $primaryKey || in_array($columnName, $timestampColumns)) {
                 continue;
             }
-            
+
             $columnRules = $this->generateColumnRules($column, $tableStructure);
-            
-            if (!empty($columnRules)) {
+
+            if (! empty($columnRules)) {
                 $rules[$columnName] = $columnRules;
             }
         }
-        
+
         return $rules;
     }
 
@@ -90,40 +90,41 @@ class ValidationRuleGenerator
         $columnName = $column['name'];
         $type = strtolower($column['type']);
         $nullable = $column['nullable'] ?? false;
-        
+
         // Add nullable rule if column is nullable
         if ($nullable) {
             $rules[] = 'nullable';
         } else {
             $rules[] = 'required';
         }
-        
+
         // Check for field-specific rules first
         foreach ($this->fieldSpecificRules as $fieldPattern => $rule) {
             if (str_contains($columnName, $fieldPattern)) {
                 $rules[] = $rule;
+
                 return $rules;
             }
         }
-        
+
         // Apply type-based rules
         $typeRule = $this->getTypeRule($column);
         if ($typeRule) {
             $rules[] = $typeRule;
         }
-        
+
         // Add unique constraint if applicable
         if ($this->hasUniqueIndex($columnName, $tableStructure)) {
             $tableName = $tableStructure['name'];
             $rules[] = "unique:{$tableName},{$columnName}";
         }
-        
+
         // Add foreign key constraint if applicable
         $foreignKey = $this->getForeignKeyConstraint($columnName, $tableStructure);
         if ($foreignKey) {
             $rules[] = $foreignKey;
         }
-        
+
         return $rules;
     }
 
@@ -134,36 +135,36 @@ class ValidationRuleGenerator
     {
         $type = strtolower($column['type']);
         $fullType = strtolower($column['full_type'] ?? $type);
-        
+
         // Handle special cases
         if ($type === 'tinyint' && str_contains($fullType, '(1)')) {
             return 'boolean';
         }
-        
+
         if ($type === 'enum') {
             $enumValues = $this->extractEnumValues($fullType);
             if ($enumValues) {
-                return 'in:' . implode(',', $enumValues);
+                return 'in:'.implode(',', $enumValues);
             }
         }
-        
+
         if (in_array($type, ['decimal', 'numeric', 'float', 'double'])) {
             $rule = $this->validationMappings[$type] ?? 'numeric';
-            
+
             // Add precision/scale constraints if available
             if (isset($column['precision']) && isset($column['scale'])) {
                 $rule .= "|between:0,{$column['precision']}";
             }
-            
+
             return $rule;
         }
-        
+
         $rule = $this->validationMappings[$type] ?? null;
-        
+
         if ($rule && str_contains($rule, '{length}') && isset($column['length'])) {
             $rule = str_replace('{length}', (string) $column['length'], $rule);
         }
-        
+
         return $rule;
     }
 
@@ -177,7 +178,7 @@ class ValidationRuleGenerator
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -190,10 +191,11 @@ class ValidationRuleGenerator
             if ($foreignKey['column'] === $columnName) {
                 $foreignTable = $foreignKey['foreign_table'];
                 $foreignColumn = $foreignKey['foreign_column'];
+
                 return "exists:{$foreignTable},{$foreignColumn}";
             }
         }
-        
+
         return null;
     }
 
@@ -205,9 +207,10 @@ class ValidationRuleGenerator
         // Match enum('value1','value2',...) pattern
         if (preg_match("/enum\(([^)]+)\)/i", $enumDefinition, $matches)) {
             $values = str_getcsv($matches[1], ',', "'");
+
             return array_map('trim', $values);
         }
-        
+
         return [];
     }
 
@@ -217,18 +220,20 @@ class ValidationRuleGenerator
     public function generateUpdateRules(array $tableStructure, string $primaryKeyPlaceholder = '{id}'): array
     {
         $rules = $this->generateRules($tableStructure);
-        
+
         // Modify unique rules to ignore current record
         foreach ($rules as $field => $fieldRules) {
             $rules[$field] = array_map(function ($rule) use ($tableStructure, $primaryKeyPlaceholder, $field) {
                 if (str_starts_with($rule, 'unique:')) {
                     $tableName = $tableStructure['name'];
+
                     return "unique:{$tableName},{$field},{$primaryKeyPlaceholder}";
                 }
+
                 return $rule;
             }, $fieldRules);
         }
-        
+
         return $rules;
     }
 
@@ -240,18 +245,18 @@ class ValidationRuleGenerator
         if (empty($rules)) {
             return 'return [];';
         }
-        
+
         $spacing = str_repeat(' ', $indent);
         $lines = [];
-        
+
         foreach ($rules as $field => $fieldRules) {
             $rulesString = implode('|', $fieldRules);
             $lines[] = "'{$field}' => '{$rulesString}'";
         }
-        
-        return "return [\n" . 
-               $spacing . implode(",\n" . $spacing, $lines) . 
-               ",\n" . str_repeat(' ', $indent - 4) . "];";
+
+        return "return [\n".
+               $spacing.implode(",\n".$spacing, $lines).
+               ",\n".str_repeat(' ', $indent - 4).'];';
     }
 
     /**
@@ -260,7 +265,7 @@ class ValidationRuleGenerator
     public function generateCustomMessages(array $rules): array
     {
         $messages = [];
-        
+
         foreach ($rules as $field => $fieldRules) {
             foreach ($fieldRules as $rule) {
                 if (str_starts_with($rule, 'unique:')) {
@@ -272,7 +277,7 @@ class ValidationRuleGenerator
                 }
             }
         }
-        
+
         return $messages;
     }
 }

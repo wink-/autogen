@@ -14,7 +14,7 @@ class OptimizationEngineServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/optimization-engine.php',
+            __DIR__.'/config/optimization-engine.php',
             'autogen.optimization-engine'
         );
     }
@@ -26,7 +26,7 @@ class OptimizationEngineServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/optimization-engine.php' => config_path('autogen/optimization-engine.php'),
+                __DIR__.'/config/optimization-engine.php' => config_path('autogen/optimization-engine.php'),
             ], 'autogen-optimization-engine-config');
         }
     }

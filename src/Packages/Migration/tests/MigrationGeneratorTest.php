@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Migration\Tests;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use AutoGen\Packages\Migration\DatabaseSchemaAnalyzer;
 use AutoGen\Packages\Migration\MigrationGenerator;
 use AutoGen\Packages\Migration\MigrationTemplateEngine;
-use AutoGen\Packages\Migration\MigrationGeneratorCommand;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class MigrationGeneratorTest extends TestCase
 {
     use RefreshDatabase;
 
     protected DatabaseSchemaAnalyzer $analyzer;
+
     protected MigrationGenerator $generator;
+
     protected MigrationTemplateEngine $templateEngine;
+
     protected string $testOutputPath;
 
     protected function setUp(): void
@@ -30,10 +31,10 @@ class MigrationGeneratorTest extends TestCase
         $this->analyzer = app(DatabaseSchemaAnalyzer::class);
         $this->generator = app(MigrationGenerator::class);
         $this->templateEngine = app(MigrationTemplateEngine::class);
-        
+
         // Create temporary output directory for tests
         $this->testOutputPath = storage_path('framework/testing/migrations');
-        if (!File::isDirectory($this->testOutputPath)) {
+        if (! File::isDirectory($this->testOutputPath)) {
             File::makeDirectory($this->testOutputPath, 0755, true);
         }
     }
@@ -310,7 +311,7 @@ class MigrationGeneratorTest extends TestCase
     public function it_validates_migration_syntax()
     {
         // Create a valid migration file
-        $validMigration = $this->testOutputPath . '/valid_migration.php';
+        $validMigration = $this->testOutputPath.'/valid_migration.php';
         file_put_contents($validMigration, '<?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -336,7 +337,7 @@ return new class extends Migration
         $this->assertEmpty($errors);
 
         // Create an invalid migration file
-        $invalidMigration = $this->testOutputPath . '/invalid_migration.php';
+        $invalidMigration = $this->testOutputPath.'/invalid_migration.php';
         file_put_contents($invalidMigration, '<?php
 // Missing required methods and imports
 class InvalidMigration {}
@@ -351,7 +352,7 @@ class InvalidMigration {}
     {
         // This would test the actual command execution
         // In a real test, you'd set up a test database with known structure
-        
+
         $this->artisan('autogen:migration', [
             '--connection' => 'testing',
             '--table' => 'migrations', // Use Laravel's migrations table as test

@@ -11,7 +11,9 @@ use Illuminate\Support\Str;
 class FormRequestGenerator
 {
     protected string $modelName;
+
     protected bool $force;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, bool $force)
@@ -42,7 +44,7 @@ class FormRequestGenerator
 
         $this->ensureDirectoryExists(dirname($path));
 
-        if (File::exists($path) && !$this->force) {
+        if (File::exists($path) && ! $this->force) {
             throw new \Exception("Store request already exists at: {$path}");
         }
 
@@ -61,7 +63,7 @@ class FormRequestGenerator
 
         $this->ensureDirectoryExists(dirname($path));
 
-        if (File::exists($path) && !$this->force) {
+        if (File::exists($path) && ! $this->force) {
             throw new \Exception("Update request already exists at: {$path}");
         }
 
@@ -75,13 +77,13 @@ class FormRequestGenerator
     protected function getStub(string $type): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        $stubName = $type . '.stub';
+        $stubName = $type.'.stub';
 
-        if ($customStubPath && File::exists($customStubPath . '/request/' . $stubName)) {
-            return File::get($customStubPath . '/request/' . $stubName);
+        if ($customStubPath && File::exists($customStubPath.'/request/'.$stubName)) {
+            return File::get($customStubPath.'/request/'.$stubName);
         }
 
-        return File::get(__DIR__ . '/Stubs/request.' . $stubName);
+        return File::get(__DIR__.'/Stubs/request.'.$stubName);
     }
 
     /**
@@ -91,7 +93,7 @@ class FormRequestGenerator
     {
         $replacements = [
             'namespace' => $this->getRequestNamespace(),
-            'className' => ($type === 'store' ? 'Store' : 'Update') . $this->getModelClass() . 'Request',
+            'className' => ($type === 'store' ? 'Store' : 'Update').$this->getModelClass().'Request',
             'modelClass' => $this->getModelClass(),
             'modelNamespace' => $this->getModelNamespace(),
             'rules' => $this->generateValidationRules($type),
@@ -100,7 +102,7 @@ class FormRequestGenerator
         ];
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -112,23 +114,23 @@ class FormRequestGenerator
     protected function generateValidationRules(string $type): string
     {
         $modelClass = $this->getFullModelClass();
-        
-        if (!class_exists($modelClass)) {
+
+        if (! class_exists($modelClass)) {
             return $this->getDefaultRules($type);
         }
 
         try {
-            $model = new $modelClass();
+            $model = new $modelClass;
             $table = $model->getTable();
             $connection = $model->getConnection();
-            
+
             $columns = Schema::connection($connection->getName())->getColumnListing($table);
             $rules = [];
 
             foreach ($columns as $column) {
                 $columnType = Schema::connection($connection->getName())->getColumnType($table, $column);
                 $rule = $this->getValidationRuleForColumn($column, $columnType, $table, $connection->getName(), $type);
-                
+
                 if ($rule) {
                     $rules[] = "            '{$column}' => {$rule},";
                 }
@@ -156,7 +158,7 @@ class FormRequestGenerator
         }
 
         $rules = [];
-        
+
         // Check if nullable
         $nullable = $this->isColumnNullable($table, $column, $connection);
         if ($nullable) {
@@ -166,7 +168,7 @@ class FormRequestGenerator
         }
 
         // Add type-specific rules
-        $typeRules = config('autogen.validation_rules.' . $columnType, 'string');
+        $typeRules = config('autogen.validation_rules.'.$columnType, 'string');
         if (is_string($typeRules)) {
             $rules[] = $typeRules;
         }
@@ -180,7 +182,7 @@ class FormRequestGenerator
         // Handle unique constraints
         if ($this->hasUniqueIndex($table, $column, $connection)) {
             if ($requestType === 'update') {
-                $rules[] = "unique:{$table},{$column},\" . \$this->route('" . Str::camel($this->getModelClass()) . "')->id";
+                $rules[] = "unique:{$table},{$column},\" . \$this->route('".Str::camel($this->getModelClass())."')->id";
             } else {
                 $rules[] = "unique:{$table},{$column}";
             }
@@ -194,7 +196,7 @@ class FormRequestGenerator
             }
         }
 
-        return "['" . implode("', '", $rules) . "']";
+        return "['".implode("', '", $rules)."']";
     }
 
     /**
@@ -206,8 +208,8 @@ class FormRequestGenerator
             $schema = \DB::connection($connection)
                 ->getDoctrineSchemaManager()
                 ->listTableDetails($table);
-            
-            return !$schema->getColumn($column)->getNotnull();
+
+            return ! $schema->getColumn($column)->getNotnull();
         } catch (\Exception $e) {
             return true; // Default to nullable if we can't determine
         }
@@ -222,13 +224,13 @@ class FormRequestGenerator
             $indexes = \DB::connection($connection)
                 ->getDoctrineSchemaManager()
                 ->listTableIndexes($table);
-            
+
             foreach ($indexes as $index) {
                 if ($index->isUnique() && in_array($column, $index->getColumns())) {
                     return true;
                 }
             }
-            
+
             return false;
         } catch (\Exception $e) {
             return false;
@@ -242,7 +244,7 @@ class FormRequestGenerator
     {
         $rules = [
             "            'name' => ['required', 'string', 'max:255'],",
-            "            'email' => ['required', 'email', 'max:255'" . ($type === 'store' ? ", 'unique:users'" : "") . "],",
+            "            'email' => ['required', 'email', 'max:255'".($type === 'store' ? ", 'unique:users'" : '').'],',
             "            'status' => ['required', 'in:active,inactive'],",
         ];
 
@@ -254,8 +256,8 @@ class FormRequestGenerator
      */
     protected function generateValidationMessages(): string
     {
-        return "            // Add custom validation messages here\n" .
-               "            // 'email.required' => 'The email address is required.',\n" .
+        return "            // Add custom validation messages here\n".
+               "            // 'email.required' => 'The email address is required.',\n".
                "            // 'email.unique' => 'This email address is already registered.',";
     }
 
@@ -264,7 +266,7 @@ class FormRequestGenerator
      */
     protected function generateAttributes(): string
     {
-        return "            // Add custom attribute names here\n" .
+        return "            // Add custom attribute names here\n".
                "            // 'email' => 'email address',";
     }
 
@@ -282,7 +284,8 @@ class FormRequestGenerator
     protected function getFullModelClass(): string
     {
         $modelPath = str_replace('/', '\\', $this->modelName);
-        return 'App\\Models\\' . $modelPath;
+
+        return 'App\\Models\\'.$modelPath;
     }
 
     /**
@@ -296,7 +299,7 @@ class FormRequestGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -313,7 +316,7 @@ class FormRequestGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -330,10 +333,10 @@ class FormRequestGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $prefix . $this->getModelClass() . 'Request.php';
+        return $path.'/'.$prefix.$this->getModelClass().'Request.php';
     }
 
     /**
@@ -341,7 +344,7 @@ class FormRequestGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

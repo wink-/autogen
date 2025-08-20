@@ -17,15 +17,11 @@ class ExecutionPlan
 
     /**
      * Expected files to be generated.
-     *
-     * @var array
      */
     protected array $expectedFiles;
 
     /**
      * Plan metadata.
-     *
-     * @var array
      */
     protected array $metadata;
 
@@ -72,7 +68,7 @@ class ExecutionPlan
      */
     public function getStepsByPackage(string $package): Collection
     {
-        return $this->steps->filter(fn($step) => $step->getPackage() === $package);
+        return $this->steps->filter(fn ($step) => $step->getPackage() === $package);
     }
 
     /**
@@ -80,7 +76,7 @@ class ExecutionPlan
      */
     public function getCriticalSteps(): Collection
     {
-        return $this->steps->filter(fn($step) => $step->isCritical());
+        return $this->steps->filter(fn ($step) => $step->isCritical());
     }
 
     /**
@@ -88,7 +84,7 @@ class ExecutionPlan
      */
     public function getOptionalSteps(): Collection
     {
-        return $this->steps->filter(fn($step) => !$step->isCritical());
+        return $this->steps->filter(fn ($step) => ! $step->isCritical());
     }
 
     /**
@@ -121,7 +117,7 @@ class ExecutionPlan
      */
     public function getStepsWithDependencies(): Collection
     {
-        return $this->steps->filter(fn($step) => !empty($step->getDependencies()));
+        return $this->steps->filter(fn ($step) => ! empty($step->getDependencies()));
     }
 
     /**
@@ -129,7 +125,7 @@ class ExecutionPlan
      */
     public function getIndependentSteps(): Collection
     {
-        return $this->steps->filter(fn($step) => empty($step->getDependencies()));
+        return $this->steps->filter(fn ($step) => empty($step->getDependencies()));
     }
 
     /**
@@ -200,7 +196,7 @@ class ExecutionPlan
         // Package breakdown
         $packageBreakdown = $this->steps
             ->groupBy('package')
-            ->map(fn($steps) => $steps->count())
+            ->map(fn ($steps) => $steps->count())
             ->toArray();
 
         $stats['package_breakdown'] = $packageBreakdown;
@@ -218,22 +214,23 @@ class ExecutionPlan
         // Check for empty plan
         if ($this->steps->isEmpty()) {
             $errors[] = 'Execution plan is empty';
+
             return $errors;
         }
 
         // Check for duplicate packages
         $packages = $this->steps->pluck('package')->toArray();
         $duplicates = array_diff_assoc($packages, array_unique($packages));
-        
-        if (!empty($duplicates)) {
-            $errors[] = 'Duplicate packages found: ' . implode(', ', array_unique($duplicates));
+
+        if (! empty($duplicates)) {
+            $errors[] = 'Duplicate packages found: '.implode(', ', array_unique($duplicates));
         }
 
         // Check for invalid orders
         $orders = $this->steps->pluck('order')->toArray();
-        $invalidOrders = array_filter($orders, fn($order) => !is_int($order) || $order < 1);
-        
-        if (!empty($invalidOrders)) {
+        $invalidOrders = array_filter($orders, fn ($order) => ! is_int($order) || $order < 1);
+
+        if (! empty($invalidOrders)) {
             $errors[] = 'Invalid execution orders found';
         }
 
@@ -241,10 +238,10 @@ class ExecutionPlan
         foreach ($this->steps as $step) {
             $dependencies = $step->getDependencies();
             $availablePackages = $packages;
-            
+
             $missingDependencies = array_diff($dependencies, $availablePackages);
-            if (!empty($missingDependencies)) {
-                $errors[] = "Step '{$step->getPackage()}' has unresolved dependencies: " . 
+            if (! empty($missingDependencies)) {
+                $errors[] = "Step '{$step->getPackage()}' has unresolved dependencies: ".
                     implode(', ', $missingDependencies);
             }
         }
@@ -274,8 +271,8 @@ class ExecutionPlan
     public function getNextStep(string $afterPackage): ?ExecutionStep
     {
         $currentStep = $this->getStep($afterPackage);
-        
-        if (!$currentStep) {
+
+        if (! $currentStep) {
             return null;
         }
 
@@ -291,8 +288,8 @@ class ExecutionPlan
     public function getPreviousStep(string $beforePackage): ?ExecutionStep
     {
         $currentStep = $this->getStep($beforePackage);
-        
-        if (!$currentStep) {
+
+        if (! $currentStep) {
             return null;
         }
 
@@ -312,7 +309,7 @@ class ExecutionPlan
             'statistics' => $this->getStatistics(),
             'timeline' => $this->getTimeline(),
             'expected_files' => $this->expectedFiles,
-            'steps' => $this->steps->map(fn($step) => $step->toArray())->toArray(),
+            'steps' => $this->steps->map(fn ($step) => $step->toArray())->toArray(),
         ];
     }
 
@@ -321,8 +318,8 @@ class ExecutionPlan
      */
     public static function fromArray(array $data): self
     {
-        $steps = collect($data['steps'] ?? [])->map(fn($stepData) => ExecutionStep::fromArray($stepData));
-        
+        $steps = collect($data['steps'] ?? [])->map(fn ($stepData) => ExecutionStep::fromArray($stepData));
+
         return new self(
             $steps,
             $data['expected_files'] ?? [],
@@ -335,7 +332,7 @@ class ExecutionPlan
      */
     public function clone(array $modifications = []): self
     {
-        $newSteps = $this->steps->map(fn($step) => clone $step);
+        $newSteps = $this->steps->map(fn ($step) => clone $step);
         $newExpectedFiles = $this->expectedFiles;
         $newMetadata = array_merge($this->metadata, $modifications);
 

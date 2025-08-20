@@ -10,11 +10,17 @@ use Illuminate\Support\Str;
 class ControllerGenerator
 {
     protected string $modelName;
+
     protected string $controllerType;
+
     protected bool $withValidation;
+
     protected bool $withPolicy;
+
     protected int $paginate;
+
     protected bool $force;
+
     protected array $generatedFiles = [];
 
     public function __construct(
@@ -69,7 +75,7 @@ class ControllerGenerator
 
         $this->ensureDirectoryExists(dirname($path));
 
-        if (File::exists($path) && !$this->force) {
+        if (File::exists($path) && ! $this->force) {
             throw new \Exception("Controller already exists at: {$path}");
         }
 
@@ -83,13 +89,13 @@ class ControllerGenerator
     protected function getStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        $stubName = $this->controllerType . '.stub';
+        $stubName = $this->controllerType.'.stub';
 
-        if ($customStubPath && File::exists($customStubPath . '/controller/' . $stubName)) {
-            return File::get($customStubPath . '/controller/' . $stubName);
+        if ($customStubPath && File::exists($customStubPath.'/controller/'.$stubName)) {
+            return File::get($customStubPath.'/controller/'.$stubName);
         }
 
-        return File::get(__DIR__ . '/Stubs/controller.' . $stubName);
+        return File::get(__DIR__.'/Stubs/controller.'.$stubName);
     }
 
     /**
@@ -100,7 +106,7 @@ class ControllerGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -133,8 +139,8 @@ class ControllerGenerator
 
         if ($this->withValidation) {
             $replacements['requestNamespace'] = $this->getRequestNamespace();
-            $replacements['storeRequest'] = 'Store' . $modelClass . 'Request';
-            $replacements['updateRequest'] = 'Update' . $modelClass . 'Request';
+            $replacements['storeRequest'] = 'Store'.$modelClass.'Request';
+            $replacements['updateRequest'] = 'Update'.$modelClass.'Request';
         }
 
         if ($this->withPolicy) {
@@ -165,7 +171,7 @@ class ControllerGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -186,7 +192,7 @@ class ControllerGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -197,7 +203,7 @@ class ControllerGenerator
      */
     protected function getControllerName(): string
     {
-        return $this->getModelClass() . 'Controller';
+        return $this->getModelClass().'Controller';
     }
 
     /**
@@ -214,7 +220,8 @@ class ControllerGenerator
     protected function getRouteName(): string
     {
         $parts = explode('/', $this->modelName);
-        $names = array_map(fn($part) => Str::kebab($part), $parts);
+        $names = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $names);
     }
 
@@ -224,7 +231,8 @@ class ControllerGenerator
     protected function getViewPath(): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::kebab($part), $parts);
+        $paths = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $paths);
     }
 
@@ -239,7 +247,7 @@ class ControllerGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -250,7 +258,7 @@ class ControllerGenerator
      */
     protected function getPolicyChecks(): string
     {
-        if (!$this->withPolicy) {
+        if (! $this->withPolicy) {
             return '';
         }
 
@@ -272,10 +280,10 @@ class ControllerGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getControllerName() . '.php';
+        return $path.'/'.$this->getControllerName().'.php';
     }
 
     /**
@@ -283,7 +291,7 @@ class ControllerGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

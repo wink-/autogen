@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace AutoGen\Packages\Datatable\Tests;
 
 use AutoGen\Packages\Datatable\DatatableGenerator;
-use AutoGen\Packages\Datatable\YajraDatatableGenerator;
-use AutoGen\Packages\Datatable\LivewireDatatableGenerator;
-use AutoGen\Packages\Datatable\InertiaDatatableGenerator;
-use AutoGen\Packages\Datatable\ApiDatatableGenerator;
 use AutoGen\Packages\Datatable\ExportGenerator;
+use AutoGen\Packages\Datatable\YajraDatatableGenerator;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -18,7 +15,7 @@ class DatatableGeneratorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Clean up any test files
         $this->cleanupTestFiles();
     }
@@ -27,7 +24,7 @@ class DatatableGeneratorTest extends TestCase
     {
         // Clean up test files after each test
         $this->cleanupTestFiles();
-        
+
         parent::tearDown();
     }
 
@@ -132,7 +129,7 @@ class DatatableGeneratorTest extends TestCase
             [
                 'withExports' => true,
                 'backgroundJobs' => true,
-                'force' => true
+                'force' => true,
             ]
         );
 
@@ -175,13 +172,13 @@ class DatatableGeneratorTest extends TestCase
         );
 
         $files = $generator->generate();
-        
+
         $this->assertNotEmpty($files);
-        
+
         // Check if the file exists in the correct nested directory
         $expectedPath = app_path('DataTables/Admin/UserDataTable.php');
         $this->assertContains($expectedPath, $files);
-        
+
         if (File::exists($expectedPath)) {
             $content = File::get($expectedPath);
             $this->assertStringContains('namespace App\\DataTables\\Admin;', $content);
@@ -209,7 +206,7 @@ class DatatableGeneratorTest extends TestCase
 
         // Should generate datatable, controller methods, views, exports, etc.
         $this->assertGreaterThan(3, count($files));
-        
+
         // Should include export files
         $this->assertContains(app_path('Exports/UserExport.php'), $files);
         $this->assertContains(app_path('Jobs/ExportUserJob.php'), $files);

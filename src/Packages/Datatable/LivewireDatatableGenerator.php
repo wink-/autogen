@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class LivewireDatatableGenerator
 {
     protected string $modelName;
+
     protected array $options;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, array $options = [])
@@ -26,7 +28,7 @@ class LivewireDatatableGenerator
     {
         $this->generateLivewireComponent();
         $this->generateLivewireView();
-        
+
         return $this->generatedFiles;
     }
 
@@ -41,7 +43,7 @@ class LivewireDatatableGenerator
         $stub = $this->getComponentStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Livewire component already exists at: {$path}");
         }
 
@@ -60,7 +62,7 @@ class LivewireDatatableGenerator
         $stub = $this->getViewStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("Livewire view already exists at: {$path}");
         }
 
@@ -74,12 +76,12 @@ class LivewireDatatableGenerator
     protected function getComponentStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/livewire.component.stub')) {
-            return File::get($customStubPath . '/datatable/livewire.component.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/livewire.component.stub')) {
+            return File::get($customStubPath.'/datatable/livewire.component.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/livewire.component.stub');
+        return File::get(__DIR__.'/Stubs/livewire.component.stub');
     }
 
     /**
@@ -88,12 +90,12 @@ class LivewireDatatableGenerator
     protected function getViewStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/livewire.view.stub')) {
-            return File::get($customStubPath . '/datatable/livewire.view.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/livewire.view.stub')) {
+            return File::get($customStubPath.'/datatable/livewire.view.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/livewire.view.stub');
+        return File::get(__DIR__.'/Stubs/livewire.view.stub');
     }
 
     /**
@@ -104,7 +106,7 @@ class LivewireDatatableGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -177,7 +179,7 @@ class LivewireDatatableGenerator
             $properties[] = 'public $loadIncrement = 25;';
         }
 
-        return '    ' . implode("\n    ", $properties);
+        return '    '.implode("\n    ", $properties);
     }
 
     /**
@@ -221,7 +223,7 @@ class LivewireDatatableGenerator
      */
     protected function getAdvancedSearchQuery(): string
     {
-        if (!($this->options['withSearch'] ?? false)) {
+        if (! ($this->options['withSearch'] ?? false)) {
             return '';
         }
 
@@ -263,7 +265,7 @@ class LivewireDatatableGenerator
         }";
         }
 
-        return $optimizations ? '        ' . implode("\n        ", $optimizations) : '';
+        return $optimizations ? '        '.implode("\n        ", $optimizations) : '';
     }
 
     /**
@@ -271,7 +273,7 @@ class LivewireDatatableGenerator
      */
     protected function getCacheQuery(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -293,15 +295,15 @@ class LivewireDatatableGenerator
      */
     protected function getVirtualScrollQuery(): string
     {
-        if (!($this->options['virtualScroll'] ?? false)) {
+        if (! ($this->options['virtualScroll'] ?? false)) {
             return '';
         }
 
-        return "
+        return '
         // Virtual scrolling implementation
-        if (\$this->loadedCount > 0) {
-            \$query->limit(\$this->loadedCount);
-        }";
+        if ($this->loadedCount > 0) {
+            $query->limit($this->loadedCount);
+        }';
     }
 
     /**
@@ -309,7 +311,7 @@ class LivewireDatatableGenerator
      */
     protected function getSearchMethods(): string
     {
-        if (!($this->options['withSearch'] ?? false)) {
+        if (! ($this->options['withSearch'] ?? false)) {
             return '';
         }
 
@@ -336,7 +338,7 @@ class LivewireDatatableGenerator
      */
     protected function getBulkMethods(): string
     {
-        if (!($this->options['withBulk'] ?? false)) {
+        if (! ($this->options['withBulk'] ?? false)) {
             return '';
         }
 
@@ -391,7 +393,7 @@ class LivewireDatatableGenerator
      */
     protected function getExportMethods(): string
     {
-        if (!($this->options['withExports'] ?? false)) {
+        if (! ($this->options['withExports'] ?? false)) {
             return '';
         }
 
@@ -427,13 +429,13 @@ class LivewireDatatableGenerator
 
         \$data = \$query->get();
         
-        " . ($this->options['backgroundJobs'] ? "
+        ".($this->options['backgroundJobs'] ? "
         // Process export in background job for large datasets
         if (\$data->count() > 1000) {
             dispatch(new Export{$this->getModelClass()}Job(\$data, \$format, auth()->user()));
             session()->flash('info', 'Export job started. You will receive an email when ready.');
             return;
-        }" : "") . "
+        }" : '')."
 
         return (new {$this->getModelClass()}Export(\$data))->download('{$this->getModelVariable()}s.' . \$format);
     }";
@@ -444,7 +446,7 @@ class LivewireDatatableGenerator
      */
     protected function getCacheImplementation(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -471,20 +473,20 @@ class LivewireDatatableGenerator
      */
     protected function getVirtualScrollImplementation(): string
     {
-        if (!($this->options['virtualScroll'] ?? false)) {
+        if (! ($this->options['virtualScroll'] ?? false)) {
             return '';
         }
 
-        return "
+        return '
     public function loadMore()
     {
-        \$this->loadedCount += \$this->loadIncrement;
+        $this->loadedCount += $this->loadIncrement;
     }
 
     public function getHasMoreProperty()
     {
-        return \$this->rows->count() >= \$this->loadedCount;
-    }";
+        return $this->rows->count() >= $this->loadedCount;
+    }';
     }
 
     /**
@@ -545,31 +547,31 @@ class LivewireDatatableGenerator
 
         if ($this->options['withBulk'] ?? false) {
             $cells[] = '<td class="px-6 py-4 whitespace-nowrap">
-                        <input type="checkbox" wire:model="selectedItems" value="{{ $' . $modelVariable . '->id }}" class="rounded">
+                        <input type="checkbox" wire:model="selectedItems" value="{{ $'.$modelVariable.'->id }}" class="rounded">
                     </td>';
         }
 
         $cells[] = '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ $' . $modelVariable . '->id }}
+                        {{ $'.$modelVariable.'->id }}
                     </td>';
 
         $cells[] = '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ $' . $modelVariable . '->name }}
+                        {{ $'.$modelVariable.'->name }}
                     </td>';
 
         $cells[] = '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ $' . $modelVariable . '->email }}
+                        {{ $'.$modelVariable.'->email }}
                     </td>';
 
         $cells[] = '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $' . $modelVariable . '->created_at->format(\'Y-m-d H:i:s\') }}
+                        {{ $'.$modelVariable.'->created_at->format(\'Y-m-d H:i:s\') }}
                     </td>';
 
         $cells[] = '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                         <a href="#" class="text-red-600 hover:text-red-900" 
                            onclick="confirm(\'Are you sure?\') || event.stopImmediatePropagation()"
-                           wire:click="delete({{ $' . $modelVariable . '->id }})">Delete</a>
+                           wire:click="delete({{ $'.$modelVariable.'->id }})">Delete</a>
                     </td>';
 
         return implode("\n                    ", $cells);
@@ -580,7 +582,7 @@ class LivewireDatatableGenerator
      */
     protected function getSearchInputs(): string
     {
-        if (!($this->options['withSearch'] ?? false)) {
+        if (! ($this->options['withSearch'] ?? false)) {
             return '';
         }
 
@@ -624,7 +626,7 @@ class LivewireDatatableGenerator
      */
     protected function getBulkActionButtons(): string
     {
-        if (!($this->options['withBulk'] ?? false)) {
+        if (! ($this->options['withBulk'] ?? false)) {
             return '';
         }
 
@@ -658,7 +660,7 @@ class LivewireDatatableGenerator
      */
     protected function getExportButtons(): string
     {
-        if (!($this->options['withExports'] ?? false)) {
+        if (! ($this->options['withExports'] ?? false)) {
             return '';
         }
 
@@ -718,7 +720,7 @@ class LivewireDatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -735,7 +737,7 @@ class LivewireDatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -746,7 +748,7 @@ class LivewireDatatableGenerator
      */
     protected function getComponentName(): string
     {
-        return $this->getModelClass() . 'Datatable';
+        return $this->getModelClass().'Datatable';
     }
 
     /**
@@ -768,10 +770,10 @@ class LivewireDatatableGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getComponentName() . '.php';
+        return $path.'/'.$this->getComponentName().'.php';
     }
 
     /**
@@ -780,11 +782,11 @@ class LivewireDatatableGenerator
     protected function getLivewireViewPath(): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::kebab($part), $parts);
-        
-        $viewPath = resource_path('views/livewire/' . implode('/', $paths));
-        
-        return $viewPath . '-datatable.blade.php';
+        $paths = array_map(fn ($part) => Str::kebab($part), $parts);
+
+        $viewPath = resource_path('views/livewire/'.implode('/', $paths));
+
+        return $viewPath.'-datatable.blade.php';
     }
 
     /**
@@ -792,7 +794,7 @@ class LivewireDatatableGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

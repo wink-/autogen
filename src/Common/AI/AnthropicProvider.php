@@ -42,7 +42,7 @@ class AnthropicProvider extends BaseAIProvider
 
     protected function hasRequiredCredentials(): bool
     {
-        return !empty($this->getConfigValue('api_key'));
+        return ! empty($this->getConfigValue('api_key'));
     }
 
     protected function makeRequest(string $endpoint, array $data = []): array

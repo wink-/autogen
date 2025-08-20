@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class PolicyGenerator
 {
     protected string $modelName;
+
     protected bool $force;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, bool $force)
@@ -25,6 +27,7 @@ class PolicyGenerator
     public function generate(): array
     {
         $this->generatePolicy();
+
         return $this->generatedFiles;
     }
 
@@ -39,7 +42,7 @@ class PolicyGenerator
 
         $this->ensureDirectoryExists(dirname($path));
 
-        if (File::exists($path) && !$this->force) {
+        if (File::exists($path) && ! $this->force) {
             throw new \Exception("Policy already exists at: {$path}");
         }
 
@@ -55,11 +58,11 @@ class PolicyGenerator
         $customStubPath = config('autogen.custom_stubs_path');
         $stubName = 'policy.stub';
 
-        if ($customStubPath && File::exists($customStubPath . '/' . $stubName)) {
-            return File::get($customStubPath . '/' . $stubName);
+        if ($customStubPath && File::exists($customStubPath.'/'.$stubName)) {
+            return File::get($customStubPath.'/'.$stubName);
         }
 
-        return File::get(__DIR__ . '/Stubs/' . $stubName);
+        return File::get(__DIR__.'/Stubs/'.$stubName);
     }
 
     /**
@@ -77,7 +80,7 @@ class PolicyGenerator
         ];
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -88,7 +91,7 @@ class PolicyGenerator
      */
     protected function getPolicyName(): string
     {
-        return $this->getModelClass() . 'Policy';
+        return $this->getModelClass().'Policy';
     }
 
     /**
@@ -126,7 +129,7 @@ class PolicyGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -143,7 +146,7 @@ class PolicyGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -160,10 +163,10 @@ class PolicyGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getPolicyName() . '.php';
+        return $path.'/'.$this->getPolicyName().'.php';
     }
 
     /**
@@ -171,7 +174,7 @@ class PolicyGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

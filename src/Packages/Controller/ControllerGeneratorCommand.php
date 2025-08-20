@@ -76,7 +76,8 @@ class ControllerGeneratorCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to generate controller: ' . $e->getMessage());
+            $this->error('Failed to generate controller: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -104,25 +105,25 @@ class ControllerGeneratorCommand extends Command
     {
         $this->newLine();
         $this->info('Next steps:');
-        
-        $controllerName = Str::studly($modelName) . 'Controller';
+
+        $controllerName = Str::studly($modelName).'Controller';
         $routePrefix = Str::plural(Str::kebab(class_basename($modelName)));
-        
+
         if ($controllerType === 'api') {
-            $this->line("1. Add routes to routes/api.php:");
+            $this->line('1. Add routes to routes/api.php:');
             $this->line("   Route::apiResource('{$routePrefix}', \\App\\Http\\Controllers\\Api\\{$controllerName}::class);");
         } else {
-            $this->line("1. Add routes to routes/web.php:");
+            $this->line('1. Add routes to routes/web.php:');
             $this->line("   Route::resource('{$routePrefix}', \\App\\Http\\Controllers\\{$controllerName}::class);");
         }
-        
+
         if ($this->option('with-policy')) {
-            $this->line("2. Register the policy in App\\Providers\\AuthServiceProvider:");
-            $this->line("   protected \$policies = [");
+            $this->line('2. Register the policy in App\\Providers\\AuthServiceProvider:');
+            $this->line('   protected $policies = [');
             $this->line("       \\App\\Models\\{$modelName}::class => \\App\\Policies\\{$modelName}Policy::class,");
-            $this->line("   ];");
+            $this->line('   ];');
         }
-        
+
         $this->line("3. Run 'php artisan autogen:views {$modelName}' to generate views (for web controllers)");
     }
 }

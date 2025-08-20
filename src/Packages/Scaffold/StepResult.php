@@ -8,50 +8,36 @@ class StepResult
 {
     /**
      * Result status.
-     *
-     * @var string
      */
     protected string $status;
 
     /**
      * Generated files.
-     *
-     * @var array
      */
     protected array $generatedFiles;
 
     /**
      * Skipped files.
-     *
-     * @var array
      */
     protected array $skippedFiles;
 
     /**
      * Error message.
-     *
-     * @var string
      */
     protected string $error;
 
     /**
      * Warning messages.
-     *
-     * @var array
      */
     protected array $warnings;
 
     /**
      * Step execution data.
-     *
-     * @var array
      */
     protected array $data;
 
     /**
      * Execution time in seconds.
-     *
-     * @var float|null
      */
     protected ?float $executionTime;
 
@@ -59,7 +45,9 @@ class StepResult
      * Result constants.
      */
     public const STATUS_SUCCESS = 'success';
+
     public const STATUS_FAILURE = 'failure';
+
     public const STATUS_SKIPPED = 'skipped';
 
     /**
@@ -278,7 +266,7 @@ class StepResult
      */
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings);
+        return ! empty($this->warnings);
     }
 
     /**
@@ -294,7 +282,7 @@ class StepResult
      */
     public function addGeneratedFile(string $file): void
     {
-        if (!in_array($file, $this->generatedFiles)) {
+        if (! in_array($file, $this->generatedFiles)) {
             $this->generatedFiles[] = $file;
         }
     }
@@ -304,7 +292,7 @@ class StepResult
      */
     public function addSkippedFile(string $file): void
     {
-        if (!in_array($file, $this->skippedFiles)) {
+        if (! in_array($file, $this->skippedFiles)) {
             $this->skippedFiles[] = $file;
         }
     }
@@ -356,7 +344,7 @@ class StepResult
     {
         return match ($this->status) {
             self::STATUS_SUCCESS => 'Success',
-            self::STATUS_FAILURE => 'Failure', 
+            self::STATUS_FAILURE => 'Failure',
             self::STATUS_SKIPPED => 'Skipped',
             default => 'Unknown',
         };
@@ -435,7 +423,7 @@ class StepResult
         // Combine error messages
         $newError = $this->error;
         if ($other->error) {
-            $newError = $newError ? $newError . '; ' . $other->error : $other->error;
+            $newError = $newError ? $newError.'; '.$other->error : $other->error;
         }
 
         // Combine execution times
@@ -550,7 +538,7 @@ class StepResult
     public function __toString(): string
     {
         $parts = [
-            $this->getStatusEmoji() . ' ' . $this->getStatusLabel()
+            $this->getStatusEmoji().' '.$this->getStatusLabel(),
         ];
 
         if ($this->getTotalFileCount() > 0) {
@@ -566,7 +554,7 @@ class StepResult
         }
 
         if ($this->error) {
-            $parts[] = 'Error: ' . $this->error;
+            $parts[] = 'Error: '.$this->error;
         }
 
         if ($this->executionTime !== null) {
@@ -582,7 +570,7 @@ class StepResult
     public function clone(array $modifications = []): self
     {
         $new = clone $this;
-        
+
         foreach ($modifications as $property => $value) {
             if (property_exists($new, $property)) {
                 $new->$property = $value;

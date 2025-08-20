@@ -27,7 +27,7 @@ class BootstrapGenerator extends BaseFrameworkGenerator
         $modelVariable = $this->getModelPluralVariable();
         $modelName = $this->modelBaseName;
         $routeName = $this->getRouteResourceName();
-        
+
         $view = "@extends('{$this->layout}')
 
 @section('title', '{$modelName} Management')
@@ -46,10 +46,10 @@ class BootstrapGenerator extends BaseFrameworkGenerator
 ";
 
         if ($this->withSearch) {
-            $view .= "                    <button type=\"button\" class=\"btn btn-outline-secondary\" onclick=\"toggleFilters()\">
-                        <i class=\"fas fa-filter\"></i> Filters
+            $view .= '                    <button type="button" class="btn btn-outline-secondary" onclick="toggleFilters()">
+                        <i class="fas fa-filter"></i> Filters
                     </button>
-";
+';
         }
 
         $view .= "                    <a href=\"{{ route('{$routeName}.create') }}\" class=\"btn btn-primary\">
@@ -98,9 +98,9 @@ class BootstrapGenerator extends BaseFrameworkGenerator
 ";
         }
 
-        $view .= "    </div>
+        $view .= '    </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -170,11 +170,11 @@ $(document).ready(function() {
         ajax: '{{ route(\"{$routeName}.index\") }}',
         columns: [
 ";
-            
+
             foreach ($this->getTableColumns() as $column) {
                 $view .= "            {data: '{$column}', name: '{$column}'},\n";
             }
-            
+
             $view .= "            {data: 'action', name: 'action', orderable: false, searchable: false}
         ],
         responsive: true,
@@ -188,10 +188,10 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "
+        $view .= '
 </script>
 @endpush
-@endsection";
+@endsection';
 
         return $view;
     }
@@ -366,11 +366,11 @@ $(document).ready(function() {
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $fieldType = $this->getFieldType($field);
-            
+
             $view .= "                        <div class=\"col-md-6 mb-3\">
                             <strong class=\"text-muted\">{$label}:</strong>
                             <div class=\"mt-1\">";
-            
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                                 <span class=\"badge {{ \${$modelVariable}->{$field} ? 'bg-success' : 'bg-danger' }}\">
@@ -387,17 +387,17 @@ $(document).ready(function() {
             } else {
                 $view .= "{{ \${$modelVariable}->{$field} ?? 'Not set' }}";
             }
-            
-            $view .= "
+
+            $view .= '
                             </div>
                         </div>
-";
+';
 
             $fieldCount++;
             if ($fieldCount % 2 === 0) {
-                $view .= "                    </div>
-                    <div class=\"row\">
-";
+                $view .= '                    </div>
+                    <div class="row">
+';
             }
         }
 
@@ -418,13 +418,13 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "                    </div>
+        $view .= '                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -471,7 +471,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 ";
         }
 
-        $view .= "@endsection";
+        $view .= '@endsection';
 
         return $view;
     }
@@ -479,18 +479,18 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
     protected function generateFormPartial(): string
     {
         $modelVariable = $this->getModelVariable();
-        
+
         $view = "<!-- Form Fields -->\n";
-        
+
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $type = $this->getFieldType($field);
             $placeholder = $this->getFieldPlaceholder($field);
             $validationAttrs = implode(' ', $this->getValidationAttributes($field));
-            
+
             $view .= "<div class=\"mb-3\">\n";
             $view .= "    <label for=\"{$field}\" class=\"form-label\">{$label}</label>\n";
-            
+
             if ($type === 'textarea') {
                 $view .= "    <textarea name=\"{$field}\" id=\"{$field}\" rows=\"4\" class=\"form-control @error('{$field}') is-invalid @enderror\" placeholder=\"{$placeholder}\" {$validationAttrs}>{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}</textarea>\n";
             } elseif ($type === 'checkbox') {
@@ -501,13 +501,13 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
             } else {
                 $view .= "    <input type=\"{$type}\" name=\"{$field}\" id=\"{$field}\" class=\"form-control @error('{$field}') is-invalid @enderror\" placeholder=\"{$placeholder}\" value=\"{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}\" {$validationAttrs}>\n";
             }
-            
+
             $view .= "    @error('{$field}')\n";
             $view .= "        <div class=\"invalid-feedback\">{{ \$message }}</div>\n";
             $view .= "    @enderror\n";
             $view .= "</div>\n\n";
         }
-        
+
         return $view;
     }
 
@@ -518,12 +518,12 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
         $routeName = $this->getRouteResourceName();
         $columns = $this->getTableColumns();
 
-        $view = "<div class=\"card-body p-0\">
-    <div class=\"table-responsive\">
-        <table class=\"table table-hover mb-0\">
-            <thead class=\"table-light\">
+        $view = '<div class="card-body p-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
                 <tr>
-";
+';
 
         foreach ($columns as $column) {
             $label = $this->getFieldLabel($column);
@@ -540,9 +540,9 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 
         foreach ($columns as $column) {
             $fieldType = $this->getFieldType($column);
-            
-            $view .= "                        <td>";
-            
+
+            $view .= '                        <td>';
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                             <span class=\"badge {{ \${$singleModelVariable}->{$column} ? 'bg-success' : 'bg-danger' }}\">
@@ -555,7 +555,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
             } else {
                 $view .= "{{ \${$singleModelVariable}->{$column} }}";
             }
-            
+
             $view .= "</td>\n";
         }
 
@@ -589,12 +589,12 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 ";
         }
 
-        $view .= "                            </div>
+        $view .= '                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan=\"" . (count($columns) + 1) . "\" class=\"text-center py-5\">
+                        <td colspan="'.(count($columns) + 1)."\" class=\"text-center py-5\">
                             <div class=\"text-muted\">
                                 <i class=\"fas fa-inbox fa-3x mb-3\"></i>
                                 <h5>No {$modelVariable} found</h5>
@@ -684,7 +684,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
         $parts = explode('/', $this->modelName);
         array_pop($parts); // Remove model name
         $parts[] = Str::snake($this->modelBaseName);
-        
-        return implode('.', array_map(fn($part) => Str::snake($part), $parts));
+
+        return implode('.', array_map(fn ($part) => Str::snake($part), $parts));
     }
 }

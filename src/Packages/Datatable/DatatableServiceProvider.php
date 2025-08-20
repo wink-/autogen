@@ -14,7 +14,7 @@ class DatatableServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/datatable.php',
+            __DIR__.'/config/datatable.php',
             'autogen.datatable'
         );
     }
@@ -33,20 +33,20 @@ class DatatableServiceProvider extends ServiceProvider
 
         // Publish configuration
         $this->publishes([
-            __DIR__ . '/config/datatable.php' => config_path('autogen/datatable.php'),
+            __DIR__.'/config/datatable.php' => config_path('autogen/datatable.php'),
         ], 'autogen-datatable-config');
 
         // Publish stub files
         $this->publishes([
-            __DIR__ . '/Stubs' => resource_path('stubs/datatable'),
+            __DIR__.'/Stubs' => resource_path('stubs/datatable'),
         ], 'autogen-datatable-stubs');
 
         // Register views if using Blade components
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'autogen-datatable');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'autogen-datatable');
 
         // Publish view files
         $this->publishes([
-            __DIR__ . '/resources/views' => resource_path('views/vendor/autogen-datatable'),
+            __DIR__.'/resources/views' => resource_path('views/vendor/autogen-datatable'),
         ], 'autogen-datatable-views');
     }
 }

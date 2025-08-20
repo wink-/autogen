@@ -5,31 +5,24 @@ declare(strict_types=1);
 namespace AutoGen\Packages\Scaffold;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class WorkflowOrchestrator
 {
     /**
      * The dependency resolver instance.
-     *
-     * @var DependencyResolver
      */
     protected DependencyResolver $dependencyResolver;
 
     /**
      * The progress tracker instance.
-     *
-     * @var ProgressTracker
      */
     protected ProgressTracker $tracker;
 
     /**
      * History of executed operations for rollback.
-     *
-     * @var array
      */
     protected array $executionHistory = [];
 
@@ -50,10 +43,10 @@ class WorkflowOrchestrator
         try {
             // Create execution plan
             $plan = $this->createExecutionPlan($config);
-            
+
             // Start tracking
             $this->tracker->start($plan);
-            
+
             // Execute each step in order
             $generatedFiles = [];
             $skippedFiles = [];
@@ -61,45 +54,45 @@ class WorkflowOrchestrator
 
             foreach ($plan->getSteps() as $step) {
                 $command->info("Executing: {$step->getPackage()} - {$step->getDescription()}");
-                
+
                 $this->tracker->startStep($step);
-                
+
                 try {
                     $result = $this->executeStep($step, $config, $command);
-                    
+
                     if ($result->isSuccess()) {
                         $generatedFiles = array_merge($generatedFiles, $result->getGeneratedFiles());
                         $skippedFiles = array_merge($skippedFiles, $result->getSkippedFiles());
-                        
+
                         // Store for rollback capability
                         $this->executionHistory[] = [
                             'step' => $step,
                             'files' => $result->getGeneratedFiles(),
                             'timestamp' => now(),
                         ];
-                        
+
                         $this->tracker->completeStep($step, $result);
                         $command->info("✓ Completed: {$step->getPackage()}");
                     } else {
-                        $errors[] = "Step '{$step->getPackage()}' failed: " . $result->getMessage();
+                        $errors[] = "Step '{$step->getPackage()}' failed: ".$result->getMessage();
                         $this->tracker->failStep($step, $result->getMessage());
-                        
+
                         // If it's a critical step, stop execution
                         if ($step->isCritical()) {
                             break;
                         }
-                        
+
                         $command->warn("⚠ Step '{$step->getPackage()}' failed but continuing...");
                     }
                 } catch (\Exception $e) {
-                    $errors[] = "Step '{$step->getPackage()}' threw exception: " . $e->getMessage();
+                    $errors[] = "Step '{$step->getPackage()}' threw exception: ".$e->getMessage();
                     $this->tracker->failStep($step, $e->getMessage());
-                    
+
                     if ($step->isCritical()) {
                         throw $e;
                     }
-                    
-                    $command->error("✗ Step '{$step->getPackage()}' failed: " . $e->getMessage());
+
+                    $command->error("✗ Step '{$step->getPackage()}' failed: ".$e->getMessage());
                 }
             }
 
@@ -116,6 +109,7 @@ class WorkflowOrchestrator
 
         } catch (\Exception $e) {
             $this->tracker->fail($e->getMessage());
+
             return WorkflowResult::failure($config, $e->getMessage());
         }
     }
@@ -130,7 +124,7 @@ class WorkflowOrchestrator
         $modelName = Str::studly(Str::singular($table));
 
         // Step 1: Model generation (always first if not skipped)
-        if (!$config['model']['skip']) {
+        if (! $config['model']['skip']) {
             $steps->push(new ExecutionStep(
                 order: 1,
                 package: 'model',
@@ -143,9 +137,9 @@ class WorkflowOrchestrator
         }
 
         // Step 2: Controller generation (depends on model)
-        if (!$config['controller']['skip']) {
+        if (! $config['controller']['skip']) {
             $dependencies = $config['model']['skip'] ? [] : ['model'];
-            
+
             $steps->push(new ExecutionStep(
                 order: 2,
                 package: 'controller',
@@ -158,11 +152,15 @@ class WorkflowOrchestrator
         }
 
         // Step 3: Views generation (depends on controller, only for resource controllers)
-        if (!$config['views']['skip'] && $config['controller']['type'] === 'resource') {
+        if (! $config['views']['skip'] && $config['controller']['type'] === 'resource') {
             $dependencies = [];
-            if (!$config['model']['skip']) $dependencies[] = 'model';
-            if (!$config['controller']['skip']) $dependencies[] = 'controller';
-            
+            if (! $config['model']['skip']) {
+                $dependencies[] = 'model';
+            }
+            if (! $config['controller']['skip']) {
+                $dependencies[] = 'controller';
+            }
+
             $steps->push(new ExecutionStep(
                 order: 3,
                 package: 'views',
@@ -177,7 +175,7 @@ class WorkflowOrchestrator
         // Step 4: Factory generation (depends on model)
         if ($config['factory']['generate']) {
             $dependencies = $config['model']['skip'] ? [] : ['model'];
-            
+
             $steps->push(new ExecutionStep(
                 order: 4,
                 package: 'factory',
@@ -192,9 +190,13 @@ class WorkflowOrchestrator
         // Step 5: DataTable generation (depends on model and views)
         if ($config['datatable']['generate']) {
             $dependencies = [];
-            if (!$config['model']['skip']) $dependencies[] = 'model';
-            if (!$config['views']['skip']) $dependencies[] = 'views';
-            
+            if (! $config['model']['skip']) {
+                $dependencies[] = 'model';
+            }
+            if (! $config['views']['skip']) {
+                $dependencies[] = 'views';
+            }
+
             $steps->push(new ExecutionStep(
                 order: 5,
                 package: 'datatable',
@@ -238,22 +240,22 @@ class WorkflowOrchestrator
             switch ($step->getPackage()) {
                 case 'model':
                     return $this->executeModelStep($parameters, $command);
-                
+
                 case 'controller':
                     return $this->executeControllerStep($parameters, $command);
-                
+
                 case 'views':
                     return $this->executeViewsStep($parameters, $command);
-                
+
                 case 'factory':
                     return $this->executeFactoryStep($parameters, $command);
-                
+
                 case 'datatable':
                     return $this->executeDataTableStep($parameters, $command);
-                
+
                 case 'migration':
                     return $this->executeMigrationStep($parameters, $command);
-                
+
                 default:
                     throw new \InvalidArgumentException("Unknown package: {$step->getPackage()}");
             }
@@ -268,9 +270,10 @@ class WorkflowOrchestrator
     protected function executeModelStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('autogen:model', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedModelFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('Model generation failed');
@@ -283,9 +286,10 @@ class WorkflowOrchestrator
     protected function executeControllerStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('autogen:controller', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedControllerFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('Controller generation failed');
@@ -298,9 +302,10 @@ class WorkflowOrchestrator
     protected function executeViewsStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('autogen:views', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedViewFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('Views generation failed');
@@ -313,9 +318,10 @@ class WorkflowOrchestrator
     protected function executeFactoryStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('make:factory', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedFactoryFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('Factory generation failed');
@@ -328,9 +334,10 @@ class WorkflowOrchestrator
     protected function executeDataTableStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('autogen:datatable', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedDataTableFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('DataTable generation failed');
@@ -343,9 +350,10 @@ class WorkflowOrchestrator
     protected function executeMigrationStep(array $parameters, Command $command): StepResult
     {
         $exitCode = Artisan::call('autogen:migration', $parameters);
-        
+
         if ($exitCode === 0) {
             $generatedFiles = $this->getGeneratedMigrationFiles($parameters);
+
             return StepResult::success($generatedFiles);
         } else {
             return StepResult::failure('Migration generation failed');
@@ -395,7 +403,7 @@ class WorkflowOrchestrator
     protected function buildControllerParameters(array $config): array
     {
         $modelName = Str::studly(Str::singular($config['table']));
-        
+
         $params = [
             'model' => $modelName,
         ];
@@ -431,14 +439,14 @@ class WorkflowOrchestrator
     protected function buildViewsParameters(array $config): array
     {
         $modelName = Str::studly(Str::singular($config['table']));
-        
+
         $params = [
             'model' => $modelName,
             '--framework' => $config['views']['framework'],
             '--layout' => $config['views']['layout'],
         ];
 
-        if (!empty($config['views']['only'])) {
+        if (! empty($config['views']['only'])) {
             $params['--only'] = implode(',', $config['views']['only']);
         }
 
@@ -467,7 +475,7 @@ class WorkflowOrchestrator
     protected function buildFactoryParameters(array $config): array
     {
         $modelName = Str::studly(Str::singular($config['table']));
-        
+
         return [
             'name' => "{$modelName}Factory",
             '--model' => "App\\Models\\{$modelName}",
@@ -480,7 +488,7 @@ class WorkflowOrchestrator
     protected function buildDataTableParameters(array $config): array
     {
         $modelName = Str::studly(Str::singular($config['table']));
-        
+
         $params = [
             'model' => $modelName,
         ];
@@ -513,31 +521,31 @@ class WorkflowOrchestrator
         $tableName = $config['table'];
 
         // Model files
-        if (!$config['model']['skip']) {
-            $modelDir = $config['model']['dir'] ? '/' . trim($config['model']['dir'], '/') : '';
+        if (! $config['model']['skip']) {
+            $modelDir = $config['model']['dir'] ? '/'.trim($config['model']['dir'], '/') : '';
             $files[] = "app/Models{$modelDir}/{$modelName}.php";
         }
 
         // Controller files
-        if (!$config['controller']['skip']) {
+        if (! $config['controller']['skip']) {
             $controllerDir = $config['controller']['type'] === 'api' ? '/Api' : '';
             $files[] = "app/Http/Controllers{$controllerDir}/{$modelName}Controller.php";
-            
+
             if ($config['controller']['with_validation']) {
                 $files[] = "app/Http/Requests/Store{$modelName}Request.php";
                 $files[] = "app/Http/Requests/Update{$modelName}Request.php";
             }
-            
+
             if ($config['controller']['with_policy']) {
                 $files[] = "app/Policies/{$modelName}Policy.php";
             }
         }
 
         // View files
-        if (!$config['views']['skip'] && $config['controller']['type'] === 'resource') {
+        if (! $config['views']['skip'] && $config['controller']['type'] === 'resource') {
             $viewDir = Str::plural(Str::kebab($modelName));
             $views = $config['views']['only'] ?: ['index', 'create', 'edit', 'show'];
-            
+
             foreach ($views as $view) {
                 $files[] = "resources/views/{$viewDir}/{$view}.blade.php";
             }
@@ -623,16 +631,16 @@ class WorkflowOrchestrator
     protected function saveExecutionHistory(array $config): void
     {
         $historyFile = storage_path('autogen/scaffold_history.json');
-        
+
         // Ensure directory exists
         File::ensureDirectoryExists(dirname($historyFile));
-        
+
         $history = [
             'timestamp' => now()->toISOString(),
             'config' => $config,
             'execution_history' => $this->executionHistory,
         ];
-        
+
         File::put($historyFile, json_encode($history, JSON_PRETTY_PRINT));
     }
 
@@ -642,17 +650,26 @@ class WorkflowOrchestrator
     public function rollback(Command $command): WorkflowResult
     {
         $historyFile = storage_path('autogen/scaffold_history.json');
-        
-        if (!File::exists($historyFile)) {
+
+        if (! File::exists($historyFile)) {
             return WorkflowResult::failure([], 'No scaffold history found for rollback.');
         }
 
         try {
-            $history = json_decode(File::get($historyFile), true);
+            $content = File::get($historyFile);
+            if ($content === false) {
+                return WorkflowResult::failure([], 'Unable to read scaffold history file.');
+            }
+
+            $history = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+
+            if (! is_array($history)) {
+                return WorkflowResult::failure([], 'Invalid scaffold history file format.');
+            }
             $executionHistory = $history['execution_history'] ?? [];
-            
+
             $rolledBackFiles = [];
-            
+
             // Rollback in reverse order
             foreach (array_reverse($executionHistory) as $execution) {
                 foreach ($execution['files'] as $file) {
@@ -663,19 +680,19 @@ class WorkflowOrchestrator
                     }
                 }
             }
-            
+
             // Remove history file
             File::delete($historyFile);
-            
+
             return WorkflowResult::success(
                 $history['config'],
                 [],
                 [],
-                "Rollback completed. Removed " . count($rolledBackFiles) . " files."
+                'Rollback completed. Removed '.count($rolledBackFiles).' files.'
             );
-            
+
         } catch (\Exception $e) {
-            return WorkflowResult::failure([], 'Rollback failed: ' . $e->getMessage());
+            return WorkflowResult::failure([], 'Rollback failed: '.$e->getMessage());
         }
     }
 }

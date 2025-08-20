@@ -89,8 +89,7 @@
             "pestphp/pest-plugin": true
         },
         "optimize-autoloader": true,
-        "preferred-install": "dist",
-        "sort-packages": true
+        "preferred-install": "dist"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

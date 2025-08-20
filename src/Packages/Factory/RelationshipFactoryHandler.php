@@ -14,51 +14,51 @@ class RelationshipFactoryHandler
     public function generateMethods(array $relationships, array $config): string
     {
         $methods = [];
-        
+
         foreach ($relationships as $relationship) {
             $methodName = $relationship['method'];
             $relationType = $relationship['type'];
-            
+
             switch ($relationType) {
                 case 'BelongsTo':
                     $methods[] = $this->generateBelongsToMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'HasOne':
                     $methods[] = $this->generateHasOneMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'HasMany':
                     $methods[] = $this->generateHasManyMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'BelongsToMany':
                     $methods[] = $this->generateBelongsToManyMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'HasManyThrough':
                     $methods[] = $this->generateHasManyThroughMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'MorphTo':
                     $methods[] = $this->generateMorphToMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'MorphOne':
                     $methods[] = $this->generateMorphOneMethod($methodName, $relationship);
                     break;
-                    
+
                 case 'MorphMany':
                     $methods[] = $this->generateMorphManyMethod($methodName, $relationship);
                     break;
             }
         }
-        
+
         // Add convenience method to create with all relationships
-        if (!empty($methods)) {
+        if (! empty($methods)) {
             $methods[] = $this->generateWithRelationshipsMethod($relationships);
         }
-        
+
         return implode("\n", $methods);
     }
 
@@ -69,12 +69,12 @@ class RelationshipFactoryHandler
     {
         $relatedModel = $this->guessRelatedModel($methodName);
         $foreignKey = $this->guessForeignKey($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship.
      */
-    public function with" . Str::studly($methodName) . "(\$attributes = []): static
+    public function with".Str::studly($methodName)."(\$attributes = []): static
     {
         return \$this->state(fn (array \$modelAttributes) => [
             '{$foreignKey}' => {$relatedModel}::factory()->create(\$attributes)->id,
@@ -88,12 +88,12 @@ class RelationshipFactoryHandler
     protected function generateHasOneMethod(string $methodName, array $relationship): string
     {
         $relatedModel = $this->guessRelatedModel($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship.
      */
-    public function with" . Str::studly($methodName) . "(\$attributes = []): static
+    public function with".Str::studly($methodName)."(\$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$attributes) {
             {$relatedModel}::factory()->create(array_merge([
@@ -110,12 +110,12 @@ class RelationshipFactoryHandler
     {
         $relatedModel = $this->guessRelatedModel($methodName);
         $count = $this->guessDefaultCount($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship.
      */
-    public function with" . Str::studly($methodName) . "(\$count = {$count}, \$attributes = []): static
+    public function with".Str::studly($methodName)."(\$count = {$count}, \$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$count, \$attributes) {
             {$relatedModel}::factory()->count(\$count)->create(array_merge([
@@ -132,12 +132,12 @@ class RelationshipFactoryHandler
     {
         $relatedModel = $this->guessRelatedModel($methodName);
         $count = $this->guessDefaultCount($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship.
      */
-    public function with" . Str::studly($methodName) . "(\$count = {$count}, \$attributes = []): static
+    public function with".Str::studly($methodName)."(\$count = {$count}, \$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$count, \$attributes) {
             \$related = {$relatedModel}::factory()->count(\$count)->create(\$attributes);
@@ -153,12 +153,12 @@ class RelationshipFactoryHandler
     {
         $relatedModel = $this->guessRelatedModel($methodName);
         $count = $this->guessDefaultCount($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship (HasManyThrough).
      */
-    public function with" . Str::studly($methodName) . "(\$count = {$count}, \$attributes = []): static
+    public function with".Str::studly($methodName)."(\$count = {$count}, \$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$count, \$attributes) {
             // Note: You may need to adjust this based on your intermediate model
@@ -176,7 +176,7 @@ class RelationshipFactoryHandler
     /**
      * Create with {$methodName} relationship (MorphTo).
      */
-    public function with" . Str::studly($methodName) . "(\$morphable): static
+    public function with".Str::studly($methodName)."(\$morphable): static
     {
         return \$this->state(fn (array \$attributes) => [
             '{$methodName}_type' => get_class(\$morphable),
@@ -191,12 +191,12 @@ class RelationshipFactoryHandler
     protected function generateMorphOneMethod(string $methodName, array $relationship): string
     {
         $relatedModel = $this->guessRelatedModel($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship (MorphOne).
      */
-    public function with" . Str::studly($methodName) . "(\$attributes = []): static
+    public function with".Str::studly($methodName)."(\$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$attributes) {
             {$relatedModel}::factory()->create(array_merge([
@@ -214,12 +214,12 @@ class RelationshipFactoryHandler
     {
         $relatedModel = $this->guessRelatedModel($methodName);
         $count = $this->guessDefaultCount($methodName);
-        
+
         return "
     /**
      * Create with {$methodName} relationship (MorphMany).
      */
-    public function with" . Str::studly($methodName) . "(\$count = {$count}, \$attributes = []): static
+    public function with".Str::studly($methodName)."(\$count = {$count}, \$attributes = []): static
     {
         return \$this->afterCreating(function (\$model) use (\$count, \$attributes) {
             {$relatedModel}::factory()->count(\$count)->create(array_merge([
@@ -236,21 +236,21 @@ class RelationshipFactoryHandler
     protected function generateWithRelationshipsMethod(array $relationships): string
     {
         $relationshipCalls = [];
-        
+
         foreach ($relationships as $relationship) {
             $methodName = $relationship['method'];
             $relationType = $relationship['type'];
             $studlyMethod = Str::studly($methodName);
-            
+
             if (in_array($relationType, ['HasMany', 'BelongsToMany', 'MorphMany'])) {
                 $relationshipCalls[] = "            ->with{$studlyMethod}(3)";
             } elseif ($relationType !== 'MorphTo') {
                 $relationshipCalls[] = "            ->with{$studlyMethod}()";
             }
         }
-        
+
         $chainedCalls = implode("\n", $relationshipCalls);
-        
+
         return "
     /**
      * Create with all relationships populated.
@@ -268,20 +268,20 @@ class RelationshipFactoryHandler
     {
         // Convert method name to model class name
         $modelName = Str::studly(Str::singular($methodName));
-        
+
         // Try to find the actual model class
         $possibleClasses = [
             "\\App\\Models\\{$modelName}",
             "\\App\\{$modelName}",
             $modelName,
         ];
-        
+
         foreach ($possibleClasses as $class) {
             if (class_exists($class)) {
                 return class_basename($class);
             }
         }
-        
+
         // Fallback to the guessed name
         return $modelName;
     }
@@ -291,7 +291,7 @@ class RelationshipFactoryHandler
      */
     protected function guessForeignKey(string $methodName): string
     {
-        return Str::snake($methodName) . '_id';
+        return Str::snake($methodName).'_id';
     }
 
     /**
@@ -310,13 +310,13 @@ class RelationshipFactoryHandler
             'images' => 4,
             'files' => 3,
         ];
-        
+
         foreach ($patterns as $pattern => $count) {
             if (str_contains(strtolower($methodName), $pattern)) {
                 return $count;
             }
         }
-        
+
         return 3; // Default count
     }
 
@@ -328,7 +328,7 @@ class RelationshipFactoryHandler
         if (empty($pivotFields)) {
             return '';
         }
-        
+
         $pivotData = [];
         foreach ($pivotFields as $field) {
             // Simple mapping for pivot fields
@@ -338,9 +338,9 @@ class RelationshipFactoryHandler
                 $pivotData[] = "            '{$field}' => \$this->faker->word(),";
             }
         }
-        
+
         $pivotDataString = implode("\n", $pivotData);
-        
+
         return "
         // Pivot data for {$relationshipName}
         \$pivotData = [
@@ -355,12 +355,12 @@ class RelationshipFactoryHandler
     public function generateForeignKeyConstraints(array $foreignKeys): string
     {
         $constraints = [];
-        
+
         foreach ($foreignKeys as $foreignKey) {
             $relatedModel = $this->guessRelatedModel(str_replace('_id', '', $foreignKey));
             $constraints[] = "            '{$foreignKey}' => {$relatedModel}::factory(),";
         }
-        
+
         return implode("\n", $constraints);
     }
 }

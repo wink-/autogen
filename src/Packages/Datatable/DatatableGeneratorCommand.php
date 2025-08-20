@@ -50,8 +50,9 @@ class DatatableGeneratorCommand extends Command
         $force = $this->option('force');
 
         // Validate datatable type
-        if (!in_array($type, ['yajra', 'livewire', 'inertia', 'api'])) {
+        if (! in_array($type, ['yajra', 'livewire', 'inertia', 'api'])) {
             $this->error("Invalid datatable type: {$type}. Supported types: yajra, livewire, inertia, api");
+
             return Command::FAILURE;
         }
 
@@ -104,7 +105,8 @@ class DatatableGeneratorCommand extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to generate datatable: ' . $e->getMessage());
+            $this->error('Failed to generate datatable: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -116,53 +118,53 @@ class DatatableGeneratorCommand extends Command
     {
         $this->newLine();
         $this->info('Next steps:');
-        
-        $datatableName = Str::studly($modelName) . 'DataTable';
+
+        $datatableName = Str::studly($modelName).'DataTable';
         $routePrefix = Str::plural(Str::kebab(class_basename($modelName)));
-        
+
         switch ($type) {
             case 'yajra':
-                $this->line("1. Add routes to routes/web.php:");
+                $this->line('1. Add routes to routes/web.php:');
                 $this->line("   Route::get('/{$routePrefix}', [\\App\\Http\\Controllers\\{$modelName}Controller::class, 'index'])->name('{$routePrefix}.index');");
                 $this->line("   Route::post('/{$routePrefix}/data', [\\App\\DataTables\\{$datatableName}::class, 'ajax'])->name('{$routePrefix}.data');");
                 break;
-                
+
             case 'livewire':
-                $this->line("1. Include the Livewire component in your Blade view:");
+                $this->line('1. Include the Livewire component in your Blade view:');
                 $this->line("   <livewire:{$routePrefix}-datatable />");
                 break;
-                
+
             case 'inertia':
-                $this->line("1. Add routes to routes/web.php:");
+                $this->line('1. Add routes to routes/web.php:');
                 $this->line("   Route::get('/{$routePrefix}', [\\App\\Http\\Controllers\\{$modelName}Controller::class, 'index'])->name('{$routePrefix}.index');");
                 $this->line("   Route::get('/{$routePrefix}/data', [\\App\\Http\\Controllers\\{$modelName}Controller::class, 'data'])->name('{$routePrefix}.data');");
                 break;
-                
+
             case 'api':
-                $this->line("1. Add routes to routes/api.php:");
+                $this->line('1. Add routes to routes/api.php:');
                 $this->line("   Route::get('/{$routePrefix}', [\\App\\Http\\Controllers\\Api\\{$modelName}Controller::class, 'index']);");
                 $this->line("   Route::get('/{$routePrefix}/data', [\\App\\Http\\Controllers\\Api\\{$modelName}Controller::class, 'data']);");
                 break;
         }
 
         if ($this->option('with-exports')) {
-            $this->line("2. Export endpoints are available:");
+            $this->line('2. Export endpoints are available:');
             $this->line("   GET /{$routePrefix}/export/{excel|csv|pdf}");
         }
 
         if ($this->option('cache')) {
-            $this->line("3. Configure Redis in your .env file:");
-            $this->line("   REDIS_HOST=127.0.0.1");
-            $this->line("   REDIS_PASSWORD=null");
-            $this->line("   REDIS_PORT=6379");
+            $this->line('3. Configure Redis in your .env file:');
+            $this->line('   REDIS_HOST=127.0.0.1');
+            $this->line('   REDIS_PASSWORD=null');
+            $this->line('   REDIS_PORT=6379');
         }
 
         if ($this->option('background-jobs')) {
-            $this->line("4. Start queue worker for background exports:");
-            $this->line("   php artisan queue:work");
+            $this->line('4. Start queue worker for background exports:');
+            $this->line('   php artisan queue:work');
         }
 
-        $this->line("5. Consider adding database indexes for better performance:");
+        $this->line('5. Consider adding database indexes for better performance:');
         $this->line("   php artisan make:migration add_indexes_to_{$routePrefix}_table");
     }
 }

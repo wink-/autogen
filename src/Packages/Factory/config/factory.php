@@ -172,7 +172,7 @@ return [
     'states' => [
         'boolean_probability' => [
             'default' => 50,    // 50% true by default
-            'active' => 80,     // 80% true for *_active fields  
+            'active' => 80,     // 80% true for *_active fields
             'enabled' => 70,    // 70% true for *_enabled fields
             'verified' => 60,   // 60% true for *_verified fields
         ],

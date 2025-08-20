@@ -112,9 +112,9 @@ class User extends Model
     
     protected $connection = self::CONNECTION;
     protected $table = 'users';
-    protected readonly string $primaryKey = 'id';
-    public readonly bool $incrementing = true;
-    protected readonly string $keyType = 'int';
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = true;
     
     protected $fillable = [

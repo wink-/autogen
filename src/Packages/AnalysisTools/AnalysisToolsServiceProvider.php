@@ -14,7 +14,7 @@ class AnalysisToolsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/analysis-tools.php',
+            __DIR__.'/config/analysis-tools.php',
             'autogen.analysis-tools'
         );
     }
@@ -26,7 +26,7 @@ class AnalysisToolsServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/analysis-tools.php' => config_path('autogen/analysis-tools.php'),
+                __DIR__.'/config/analysis-tools.php' => config_path('autogen/analysis-tools.php'),
             ], 'autogen-analysis-tools-config');
         }
     }

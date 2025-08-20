@@ -135,8 +135,12 @@ class AIProviderManager extends Manager implements AIProviderInterface
      */
     public function executeWithFallback(callable $callback): mixed
     {
-        $retryAttempts = $this->getConfigValue('retry_attempts', 3);
-        $retryDelay = $this->getConfigValue('retry_delay', 1000);
+        $retryAttempts = $this->validateRetryAttempts(
+            $this->getConfigValue('retry_attempts', 3)
+        );
+        $baseRetryDelay = $this->validateRetryDelay(
+            $this->getConfigValue('retry_delay', 1000)
+        );
         $fallbackProvider = $this->getConfigValue('fallback_provider');
 
         for ($attempt = 1; $attempt <= $retryAttempts; $attempt++) {
@@ -154,12 +158,61 @@ class AIProviderManager extends Manager implements AIProviderInterface
                     throw $e;
                 }
 
-                if ($retryDelay > 0) {
-                    usleep($retryDelay * 1000);
+                // Implement exponential backoff with jitter and maximum cap
+                $delay = $this->calculateBackoffDelay($baseRetryDelay, $attempt);
+                if ($delay > 0) {
+                    usleep($delay);
                 }
             }
         }
 
         throw new AIProviderException('Maximum retry attempts exceeded');
+    }
+
+    /**
+     * Calculate exponential backoff delay with jitter and maximum cap.
+     */
+    private function calculateBackoffDelay(int $baseDelay, int $attempt): int
+    {
+        // Maximum delay cap of 5 seconds (5,000,000 microseconds)
+        $maxDelay = 5_000_000;
+
+        // Exponential backoff: base_delay * 2^(attempt-1)
+        $exponentialDelay = $baseDelay * (2 ** ($attempt - 1));
+
+        // Add jitter (random variation of ±25%)
+        $jitterRange = (int) ($exponentialDelay * 0.25);
+        $jitter = random_int(-$jitterRange, $jitterRange);
+        $delayWithJitter = $exponentialDelay + $jitter;
+
+        // Cap the delay to maximum allowed
+        return min($delayWithJitter, $maxDelay);
+    }
+
+    /**
+     * Validate retry attempts configuration.
+     */
+    private function validateRetryAttempts(mixed $attempts): int
+    {
+        if (! is_int($attempts) || $attempts < 1) {
+            return 3; // Default safe value
+        }
+
+        // Cap maximum retry attempts to prevent excessive delays
+        return min($attempts, 10);
+    }
+
+    /**
+     * Validate retry delay configuration.
+     */
+    private function validateRetryDelay(mixed $delay): int
+    {
+        if (! is_int($delay) || $delay < 0) {
+            return 1000; // Default safe value in milliseconds
+        }
+
+        // Cap maximum base delay to 2 seconds (2000ms)
+        // This ensures even with exponential backoff, we don't exceed reasonable limits
+        return min($delay, 2000);
     }
 }

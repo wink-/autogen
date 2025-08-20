@@ -26,31 +26,31 @@ class FactoryPackageServiceProvider extends ServiceProvider
     {
         // Merge configuration
         $this->mergeConfigFrom(
-            __DIR__ . '/config/factory.php',
+            __DIR__.'/config/factory.php',
             'autogen.factory'
         );
 
         // Register services
         $this->app->singleton(FakeDataMapper::class, function ($app) {
-            $mapper = new FakeDataMapper();
-            
+            $mapper = new FakeDataMapper;
+
             // Add custom patterns from config
             $customPatterns = config('autogen.factory.custom_field_patterns', []);
             foreach ($customPatterns as $pattern => $faker) {
                 $mapper->addCustomPattern($pattern, $faker);
             }
-            
+
             // Add custom data types from config
             $customDataTypes = config('autogen.factory.custom_data_types', []);
             foreach ($customDataTypes as $type => $faker) {
                 $mapper->addCustomDataType($type, $faker);
             }
-            
+
             return $mapper;
         });
 
         $this->app->singleton(RelationshipFactoryHandler::class);
-        
+
         $this->app->singleton(FactoryGenerator::class, function ($app) {
             return new FactoryGenerator(
                 $app->make(FakeDataMapper::class),
@@ -68,12 +68,12 @@ class FactoryPackageServiceProvider extends ServiceProvider
         // Publish configuration
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/factory.php' => config_path('autogen/factory.php'),
+                __DIR__.'/config/factory.php' => config_path('autogen/factory.php'),
             ], 'autogen-factory-config');
 
             // Publish stubs
             $this->publishes([
-                __DIR__ . '/Stubs' => resource_path('stubs/autogen/factory'),
+                __DIR__.'/Stubs' => resource_path('stubs/autogen/factory'),
             ], 'autogen-factory-stubs');
 
             // Register commands
@@ -83,7 +83,7 @@ class FactoryPackageServiceProvider extends ServiceProvider
         }
 
         // Load views if needed
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'autogen-factory');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'autogen-factory');
     }
 
     /**

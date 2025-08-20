@@ -209,6 +209,10 @@ return [
             'cache_ttl' => 3600, // 1 hour
             'exclude_columns' => ['password', 'remember_token'],
             'max_table_scan' => 100,
+            'batch_size' => 50, // Process tables in batches
+            'lazy_loading' => true,
+            'use_connection_pooling' => true,
+            'query_timeout' => 30, // seconds
         ],
     ],
 
@@ -266,6 +270,27 @@ return [
         'use_database_transactions' => true,
         'chunk_size' => 1000,
         'pagination_size' => 15,
+        'monitoring' => [
+            'enabled' => env('AUTOGEN_PERFORMANCE_MONITORING', true),
+            'track_generation_time' => true,
+            'track_memory_usage' => true,
+            'track_query_count' => true,
+            'slow_query_threshold' => 1.0, // seconds
+            'memory_usage_threshold' => 128 * 1024 * 1024, // 128MB
+        ],
+        'profiling' => [
+            'enabled' => env('AUTOGEN_PROFILING_ENABLED', false),
+            'sample_rate' => 0.1, // Profile 10% of operations
+            'store_traces' => true,
+            'max_trace_size' => 1000,
+        ],
+        'benchmarking' => [
+            'enabled' => env('AUTOGEN_BENCHMARKING_ENABLED', false),
+            'iterations' => 10,
+            'warmup_iterations' => 3,
+            'store_results' => true,
+            'compare_baseline' => true,
+        ],
     ],
 
     /*
@@ -312,6 +337,49 @@ return [
         'variable_delimiters' => ['{{', '}}'],
         'preserve_formatting' => true,
         'minify_output' => false,
+        'caching' => [
+            'enabled' => true,
+            'ttl' => 7200, // 2 hours
+            'compile_cache' => true,
+            'precompile_stubs' => true,
+            'cache_compiled_templates' => true,
+            'lazy_compilation' => true,
+        ],
+        'optimization' => [
+            'reduce_file_operations' => true,
+            'batch_template_loading' => true,
+            'use_memory_cache' => true,
+            'compress_cached_templates' => true,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Package Registry Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the AutoGen package registry system
+    |
+    */
+    'registry' => [
+        'enabled' => true,
+        'auto_discovery' => true,
+        'discovery_paths' => [
+            __DIR__ . '/../src/Packages',
+        ],
+        'package_cache' => [
+            'enabled' => true,
+            'ttl' => 3600,
+            'key_prefix' => 'autogen_packages',
+            'warm_on_boot' => true,
+            'background_refresh' => true,
+            'cache_discovery_results' => true,
+        ],
+        'error_handling' => [
+            'fail_on_package_error' => false,
+            'log_package_errors' => true,
+            'graceful_degradation' => true,
+        ],
     ],
 
     /*

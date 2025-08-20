@@ -24,26 +24,26 @@ trait AutoGenModelTrait
     {
         $fillable = $this->getFillable();
         $guarded = $this->getGuarded();
-        
+
         if (empty($fillable) && empty($guarded)) {
             // If no fillable/guarded specified, use all columns except primary key and timestamps
             $columns = $this->getConnection()
                 ->getSchemaBuilder()
                 ->getColumnListing($this->getTable());
-            
+
             $exclude = [
                 $this->getKeyName(),
                 $this->getCreatedAtColumn(),
                 $this->getUpdatedAtColumn(),
             ];
-            
+
             if ($this->usesTimestamps() === false) {
                 $exclude = [$this->getKeyName()];
             }
-            
+
             return array_diff($columns, $exclude);
         }
-        
+
         return $fillable;
     }
 
@@ -59,7 +59,7 @@ trait AutoGenModelTrait
                 $query->where($column, $value);
             }
         }
-        
+
         return $query;
     }
 
@@ -87,11 +87,11 @@ trait AutoGenModelTrait
         if (empty($search)) {
             return $query;
         }
-        
+
         if (empty($columns)) {
             $columns = $this->getSearchableColumns();
         }
-        
+
         return $query->where(function ($q) use ($search, $columns) {
             foreach ($columns as $column) {
                 $q->orWhere($column, 'LIKE', "%{$search}%");
@@ -107,7 +107,7 @@ trait AutoGenModelTrait
         $columns = $this->getConnection()
             ->getSchemaBuilder()
             ->getColumnListing($this->getTable());
-        
+
         // Filter to text-like columns
         $textColumns = [];
         foreach ($columns as $column) {
@@ -117,7 +117,7 @@ trait AutoGenModelTrait
                 $textColumns[] = $column;
             }
         }
-        
+
         return $textColumns;
     }
 
@@ -129,16 +129,16 @@ trait AutoGenModelTrait
         $columns = $this->getConnection()
             ->getSchemaBuilder()
             ->getColumnListing($this->getTable());
-        
+
         // Try to order by common columns in priority order
         $orderColumns = ['order', 'sort_order', 'position', 'created_at', 'id'];
-        
+
         foreach ($orderColumns as $column) {
             if (in_array($column, $columns)) {
                 return $query->orderBy($column, $direction);
             }
         }
-        
+
         // Fallback to primary key
         return $query->orderBy($this->getKeyName(), $direction);
     }
@@ -156,10 +156,10 @@ trait AutoGenModelTrait
      */
     public function scopeToday(Builder $query): Builder
     {
-        if (!$this->usesTimestamps()) {
+        if (! $this->usesTimestamps()) {
             return $query;
         }
-        
+
         return $query->whereDate($this->getCreatedAtColumn(), today());
     }
 
@@ -168,10 +168,10 @@ trait AutoGenModelTrait
      */
     public function scopeThisWeek(Builder $query): Builder
     {
-        if (!$this->usesTimestamps()) {
+        if (! $this->usesTimestamps()) {
             return $query;
         }
-        
+
         return $query->whereBetween($this->getCreatedAtColumn(), [
             now()->startOfWeek(),
             now()->endOfWeek(),
@@ -183,12 +183,12 @@ trait AutoGenModelTrait
      */
     public function scopeThisMonth(Builder $query): Builder
     {
-        if (!$this->usesTimestamps()) {
+        if (! $this->usesTimestamps()) {
             return $query;
         }
-        
+
         return $query->whereMonth($this->getCreatedAtColumn(), now()->month)
-                    ->whereYear($this->getCreatedAtColumn(), now()->year);
+            ->whereYear($this->getCreatedAtColumn(), now()->year);
     }
 
     /**
@@ -197,19 +197,19 @@ trait AutoGenModelTrait
     public function toApiArray(): array
     {
         $attributes = $this->toArray();
-        
+
         // Remove hidden attributes
         foreach ($this->getHidden() as $hidden) {
             unset($attributes[$hidden]);
         }
-        
+
         // Format dates consistently
         foreach ($this->getDates() as $date) {
             if (isset($attributes[$date]) && $attributes[$date]) {
                 $attributes[$date] = $this->asDateTime($attributes[$date])->toISOString();
             }
         }
-        
+
         return $attributes;
     }
 
@@ -227,7 +227,7 @@ trait AutoGenModelTrait
                 'attributes' => $attributes,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
@@ -247,7 +247,7 @@ trait AutoGenModelTrait
                 'attributes' => $attributes,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
@@ -267,13 +267,13 @@ trait AutoGenModelTrait
     {
         $relationships = [];
         $methods = get_class_methods($this);
-        
+
         foreach ($methods as $method) {
             if ($this->isRelationshipMethod($method)) {
                 $relationships[] = $method;
             }
         }
-        
+
         return $relationships;
     }
 
@@ -285,22 +285,23 @@ trait AutoGenModelTrait
         if (in_array($method, ['relationLoaded', 'relationResolver', 'relations'])) {
             return false;
         }
-        
+
         try {
             $reflection = new \ReflectionMethod($this, $method);
-            
-            if ($reflection->isPublic() && !$reflection->isStatic()) {
+
+            if ($reflection->isPublic() && ! $reflection->isStatic()) {
                 $returnType = $reflection->getReturnType();
-                
-                if ($returnType && !$returnType->isBuiltin()) {
+
+                if ($returnType && ! $returnType->isBuiltin()) {
                     $typeName = $returnType->getName();
+
                     return Str::startsWith($typeName, 'Illuminate\\Database\\Eloquent\\Relations\\');
                 }
             }
         } catch (\ReflectionException $e) {
             // Method doesn't exist or is not accessible
         }
-        
+
         return false;
     }
 
@@ -310,7 +311,7 @@ trait AutoGenModelTrait
     public function toSelectOption(): array
     {
         $labelColumn = $this->getSelectLabelColumn();
-        
+
         return [
             'value' => $this->getKey(),
             'label' => $this->getAttribute($labelColumn),
@@ -325,16 +326,16 @@ trait AutoGenModelTrait
         $columns = $this->getConnection()
             ->getSchemaBuilder()
             ->getColumnListing($this->getTable());
-        
+
         // Try common label columns in order of preference
         $labelColumns = ['name', 'title', 'label', 'display_name', 'description'];
-        
+
         foreach ($labelColumns as $column) {
             if (in_array($column, $columns)) {
                 return $column;
             }
         }
-        
+
         // Fallback to primary key
         return $this->getKeyName();
     }

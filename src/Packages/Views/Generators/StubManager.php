@@ -13,7 +13,7 @@ class StubManager
     public static function getStub(string $framework, string $stubName): string
     {
         $cacheKey = "{$framework}.{$stubName}";
-        
+
         if (isset(self::$stubCache[$cacheKey])) {
             return self::$stubCache[$cacheKey];
         }
@@ -46,8 +46,8 @@ class StubManager
     protected static function getCustomStubPath(string $framework, string $stubName): string
     {
         $customStubsPath = config('autogen.custom_stubs_path');
-        
-        if (!$customStubsPath) {
+
+        if (! $customStubsPath) {
             return '';
         }
 
@@ -56,14 +56,14 @@ class StubManager
 
     protected static function getBuiltInStubPath(string $framework, string $stubName): string
     {
-        return __DIR__ . "/../Stubs/{$framework}/{$stubName}.stub";
+        return __DIR__."/../Stubs/{$framework}/{$stubName}.stub";
     }
 
     public static function listAvailableStubs(string $framework): array
     {
         $stubs = [];
-        $stubPath = __DIR__ . "/../Stubs/{$framework}";
-        
+        $stubPath = __DIR__."/../Stubs/{$framework}";
+
         if (File::isDirectory($stubPath)) {
             $files = File::files($stubPath);
             foreach ($files as $file) {
@@ -78,9 +78,9 @@ class StubManager
 
     public static function publishStubs(string $targetPath): void
     {
-        $sourcePath = __DIR__ . '/../Stubs';
-        
-        if (!File::isDirectory($targetPath)) {
+        $sourcePath = __DIR__.'/../Stubs';
+
+        if (! File::isDirectory($targetPath)) {
             File::makeDirectory($targetPath, 0755, true);
         }
 

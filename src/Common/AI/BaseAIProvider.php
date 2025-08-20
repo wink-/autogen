@@ -65,9 +65,9 @@ abstract class BaseAIProvider implements AIProviderInterface
     {
         $prompt = $basePrompt;
 
-        if (!empty($context)) {
+        if (! empty($context)) {
             $contextStr = $this->formatContext($context);
-            $prompt .= "\n\nContext:\n" . $contextStr;
+            $prompt .= "\n\nContext:\n".$contextStr;
         }
 
         return $prompt;
@@ -79,12 +79,12 @@ abstract class BaseAIProvider implements AIProviderInterface
     protected function formatContext(array $context): string
     {
         $formatted = [];
-        
+
         foreach ($context as $key => $value) {
             if (is_array($value)) {
                 $value = json_encode($value, JSON_PRETTY_PRINT);
             }
-            
+
             $formatted[] = "{$key}: {$value}";
         }
 
@@ -101,8 +101,8 @@ abstract class BaseAIProvider implements AIProviderInterface
         $code = preg_replace('/\n?```$/', '', $code);
 
         // Remove opening PHP tag if not needed
-        if (!str_starts_with(trim($code), '<?php')) {
-            $code = "<?php\n\n" . $code;
+        if (! str_starts_with(trim($code), '<?php')) {
+            $code = "<?php\n\n".$code;
         }
 
         // Ensure proper indentation
@@ -113,9 +113,10 @@ abstract class BaseAIProvider implements AIProviderInterface
 
         foreach ($lines as $line) {
             $trimmedLine = trim($line);
-            
+
             if (empty($trimmedLine)) {
                 $formattedLines[] = '';
+
                 continue;
             }
 
@@ -124,7 +125,7 @@ abstract class BaseAIProvider implements AIProviderInterface
                 $indentLevel = max(0, $indentLevel - 1);
             }
 
-            $formattedLines[] = str_repeat(' ', $indentLevel * $indentSize) . $trimmedLine;
+            $formattedLines[] = str_repeat(' ', $indentLevel * $indentSize).$trimmedLine;
 
             if (str_contains($trimmedLine, '{')) {
                 $indentLevel++;

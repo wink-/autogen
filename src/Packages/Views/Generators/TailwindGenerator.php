@@ -27,7 +27,7 @@ class TailwindGenerator extends BaseFrameworkGenerator
         $modelVariable = $this->getModelPluralVariable();
         $modelName = $this->modelBaseName;
         $routeName = $this->getRouteResourceName();
-        
+
         $view = "@extends('{$this->layout}')
 
 @section('title', '{$modelName} Management')
@@ -46,13 +46,13 @@ class TailwindGenerator extends BaseFrameworkGenerator
 ";
 
         if ($this->withSearch) {
-            $view .= "                    <button onclick=\"toggleFilters()\" class=\"inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500\">
-                        <svg class=\"w-4 h-4 mr-2\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
-                            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z\"></path>
+            $view .= '                    <button onclick="toggleFilters()" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                         </svg>
                         Filters
                     </button>
-";
+';
         }
 
         $view .= "                    <a href=\"{{ route('{$routeName}.create') }}\" class=\"inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150\">
@@ -102,9 +102,9 @@ class TailwindGenerator extends BaseFrameworkGenerator
 ";
         }
 
-        $view .= "    </div>
+        $view .= '    </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -181,11 +181,11 @@ $(document).ready(function() {
         ajax: '{{ route(\"{$routeName}.index\") }}',
         columns: [
 ";
-            
+
             foreach ($this->getTableColumns() as $column) {
                 $view .= "            {data: '{$column}', name: '{$column}'},\n";
             }
-            
+
             $view .= "            {data: 'action', name: 'action', orderable: false, searchable: false}
         ],
         responsive: true,
@@ -199,10 +199,10 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "
+        $view .= '
 </script>
 @endpush
-@endsection";
+@endsection';
 
         return $view;
     }
@@ -403,11 +403,11 @@ $(document).ready(function() {
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $fieldType = $this->getFieldType($field);
-            
+
             $view .= "                    <div>
                         <dt class=\"text-sm font-medium text-gray-500\">{$label}</dt>
                         <dd class=\"mt-1 text-sm text-gray-900\">";
-            
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                             <span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ \${$modelVariable}->{$field} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}\">
@@ -424,11 +424,11 @@ $(document).ready(function() {
             } else {
                 $view .= "{{ \${$modelVariable}->{$field} ?? 'Not set' }}";
             }
-            
-            $view .= "
+
+            $view .= '
                         </dd>
                     </div>
-";
+';
         }
 
         // Add timestamps if they exist
@@ -448,12 +448,12 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "                </dl>
+        $view .= '                </dl>
             </div>
         </div>
     </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ";
         }
 
-        $view .= "@endsection";
+        $view .= '@endsection';
 
         return $view;
     }
@@ -521,18 +521,18 @@ document.addEventListener('DOMContentLoaded', function() {
     protected function generateFormPartial(): string
     {
         $modelVariable = $this->getModelVariable();
-        
+
         $view = "<!-- Form Fields -->\n";
-        
+
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $type = $this->getFieldType($field);
             $placeholder = $this->getFieldPlaceholder($field);
             $validationAttrs = implode(' ', $this->getValidationAttributes($field));
-            
+
             $view .= "<div class=\"mb-6\">\n";
             $view .= "    <label for=\"{$field}\" class=\"block text-sm font-medium text-gray-700 mb-2\">{$label}</label>\n";
-            
+
             if ($type === 'textarea') {
                 $view .= "    <textarea name=\"{$field}\" id=\"{$field}\" rows=\"4\" class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('{$field}') border-red-500 @enderror\" placeholder=\"{$placeholder}\" {$validationAttrs}>{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}</textarea>\n";
             } elseif ($type === 'checkbox') {
@@ -543,13 +543,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 $view .= "    <input type=\"{$type}\" name=\"{$field}\" id=\"{$field}\" class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('{$field}') border-red-500 @enderror\" placeholder=\"{$placeholder}\" value=\"{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}\" {$validationAttrs}>\n";
             }
-            
+
             $view .= "    @error('{$field}')\n";
             $view .= "        <p class=\"mt-1 text-sm text-red-600\">{{ \$message }}</p>\n";
             $view .= "    @enderror\n";
             $view .= "</div>\n\n";
         }
-        
+
         return $view;
     }
 
@@ -560,12 +560,12 @@ document.addEventListener('DOMContentLoaded', function() {
         $routeName = $this->getRouteResourceName();
         $columns = $this->getTableColumns();
 
-        $view = "<div class=\"overflow-hidden\">
-    <div class=\"overflow-x-auto\">
-        <table class=\"min-w-full divide-y divide-gray-200\">
-            <thead class=\"bg-gray-50\">
+        $view = '<div class="overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
                 <tr>
-";
+';
 
         foreach ($columns as $column) {
             $label = $this->getFieldLabel($column);
@@ -582,9 +582,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         foreach ($columns as $column) {
             $fieldType = $this->getFieldType($column);
-            
-            $view .= "                        <td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-900\">";
-            
+
+            $view .= '                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">';
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                             <span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ \${$singleModelVariable}->{$column} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}\">
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 $view .= "{{ \${$singleModelVariable}->{$column} }}";
             }
-            
+
             $view .= "</td>\n";
         }
 
@@ -640,12 +640,12 @@ document.addEventListener('DOMContentLoaded', function() {
 ";
         }
 
-        $view .= "                            </div>
+        $view .= '                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan=\"" . (count($columns) + 1) . "\" class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center\">
+                        <td colspan="'.(count($columns) + 1)."\" class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center\">
                             <div class=\"flex flex-col items-center justify-center py-8\">
                                 <svg class=\"w-12 h-12 text-gray-400 mb-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
                                     <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4\"></path>
@@ -679,8 +679,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     protected function generateFiltersPartial(): string
     {
-        $searchableFields = array_filter($this->fillableFields, function($field) {
+        $searchableFields = array_filter($this->fillableFields, function ($field) {
             $type = $this->getFieldType($field);
+
             return in_array($type, ['text', 'email', 'textarea']);
         });
 
@@ -746,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $parts = explode('/', $this->modelName);
         array_pop($parts); // Remove model name
         $parts[] = Str::snake($this->modelBaseName);
-        
-        return implode('.', array_map(fn($part) => Str::snake($part), $parts));
+
+        return implode('.', array_map(fn ($part) => Str::snake($part), $parts));
     }
 }

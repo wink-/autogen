@@ -11,8 +11,6 @@ class DependencyResolver
     /**
      * Package dependency matrix.
      * Maps package -> dependencies.
-     *
-     * @var array
      */
     protected array $dependencyMatrix = [
         'model' => [],
@@ -30,10 +28,10 @@ class DependencyResolver
     {
         // Create a dependency graph
         $graph = $this->buildDependencyGraph($steps);
-        
+
         // Perform topological sort
         $sorted = $this->topologicalSort($graph);
-        
+
         // Return steps in resolved order
         return $sorted->sortBy('order')->values();
     }
@@ -44,19 +42,19 @@ class DependencyResolver
     protected function buildDependencyGraph(Collection $steps): Collection
     {
         $graph = collect();
-        
+
         foreach ($steps as $step) {
             $packageName = $step->getPackage();
-            
+
             // Get dependencies for this package
             $dependencies = $this->getDependenciesForPackage($packageName, $steps);
-            
+
             // Update step with resolved dependencies
             $step->setResolvedDependencies($dependencies);
-            
+
             $graph->push($step);
         }
-        
+
         return $graph;
     }
 
@@ -67,7 +65,7 @@ class DependencyResolver
     {
         $allDependencies = $this->dependencyMatrix[$package] ?? [];
         $availablePackages = $availableSteps->pluck('package')->toArray();
-        
+
         // Only include dependencies that are actually being generated
         return array_intersect($allDependencies, $availablePackages);
     }
@@ -80,19 +78,19 @@ class DependencyResolver
         $sorted = collect();
         $inDegree = [];
         $adjacencyList = [];
-        
+
         // Initialize in-degree count and adjacency list
         foreach ($graph as $step) {
             $package = $step->getPackage();
             $inDegree[$package] = 0;
             $adjacencyList[$package] = [];
         }
-        
+
         // Build adjacency list and calculate in-degrees
         foreach ($graph as $step) {
             $package = $step->getPackage();
             $dependencies = $step->getResolvedDependencies();
-            
+
             foreach ($dependencies as $dependency) {
                 if (isset($adjacencyList[$dependency])) {
                     $adjacencyList[$dependency][] = $package;
@@ -100,7 +98,7 @@ class DependencyResolver
                 }
             }
         }
-        
+
         // Find nodes with no incoming edges
         $queue = collect();
         foreach ($inDegree as $package => $degree) {
@@ -111,21 +109,21 @@ class DependencyResolver
                 }
             }
         }
-        
+
         // Process queue
         $order = 1;
         while ($queue->isNotEmpty()) {
             $currentStep = $queue->shift();
             $currentPackage = $currentStep->getPackage();
-            
+
             // Set execution order
             $currentStep->setOrder($order++);
             $sorted->push($currentStep);
-            
+
             // Reduce in-degree for dependent packages
             foreach ($adjacencyList[$currentPackage] as $dependentPackage) {
                 $inDegree[$dependentPackage]--;
-                
+
                 if ($inDegree[$dependentPackage] === 0) {
                     $dependentStep = $graph->firstWhere('package', $dependentPackage);
                     if ($dependentStep) {
@@ -134,12 +132,12 @@ class DependencyResolver
                 }
             }
         }
-        
+
         // Check for circular dependencies
         if ($sorted->count() !== $graph->count()) {
             throw new \RuntimeException('Circular dependency detected in scaffold packages');
         }
-        
+
         return $sorted;
     }
 
@@ -150,13 +148,13 @@ class DependencyResolver
     {
         $errors = [];
         $availablePackages = $steps->pluck('package')->toArray();
-        
+
         foreach ($steps as $step) {
             $package = $step->getPackage();
             $requiredDependencies = $this->dependencyMatrix[$package] ?? [];
-            
+
             foreach ($requiredDependencies as $dependency) {
-                if (!in_array($dependency, $availablePackages)) {
+                if (! in_array($dependency, $availablePackages)) {
                     // Check if the dependency is actually required
                     if ($this->isDependencyRequired($package, $dependency, $steps)) {
                         $errors[] = "Package '{$package}' requires '{$dependency}' but it's not being generated";
@@ -164,7 +162,7 @@ class DependencyResolver
                 }
             }
         }
-        
+
         return $errors;
     }
 
@@ -179,19 +177,19 @@ class DependencyResolver
                 // Controller doesn't strictly require model if it's an API controller
                 // without model binding, but generally it does
                 return $dependency === 'model';
-                
+
             case 'views':
                 // Views require model and controller for proper CRUD functionality
                 return in_array($dependency, ['model', 'controller']);
-                
+
             case 'factory':
                 // Factory requires model
                 return $dependency === 'model';
-                
+
             case 'datatable':
                 // DataTable requires model, views are recommended but not strict requirement
                 return $dependency === 'model';
-                
+
             default:
                 return true;
         }
@@ -204,16 +202,16 @@ class DependencyResolver
     {
         $timeline = [];
         $resolvedSteps = $this->resolveDependencies($steps);
-        
+
         $currentLevel = 1;
         $processedPackages = [];
-        
+
         while ($resolvedSteps->isNotEmpty()) {
             $readyToExecute = [];
-            
+
             foreach ($resolvedSteps as $key => $step) {
                 $dependencies = $step->getResolvedDependencies();
-                
+
                 // Check if all dependencies are satisfied
                 if (empty(array_diff($dependencies, $processedPackages))) {
                     $readyToExecute[] = $step;
@@ -221,16 +219,16 @@ class DependencyResolver
                     $resolvedSteps->forget($key);
                 }
             }
-            
+
             if (empty($readyToExecute)) {
                 // This shouldn't happen if dependencies are resolved correctly
                 throw new \RuntimeException('Unable to resolve execution timeline - possible circular dependency');
             }
-            
+
             $timeline[$currentLevel] = $readyToExecute;
             $currentLevel++;
         }
-        
+
         return $timeline;
     }
 
@@ -241,7 +239,7 @@ class DependencyResolver
     {
         $groups = [];
         $timeline = $this->getExecutionTimeline($steps);
-        
+
         foreach ($timeline as $level => $stepsAtLevel) {
             if (count($stepsAtLevel) > 1) {
                 $groups[$level] = array_map(function ($step) {
@@ -249,7 +247,7 @@ class DependencyResolver
                 }, $stepsAtLevel);
             }
         }
-        
+
         return $groups;
     }
 
@@ -260,23 +258,23 @@ class DependencyResolver
     {
         $resolvedSteps = $this->resolveDependencies($steps);
         $criticalPath = [];
-        
+
         // Find the longest path through the dependency graph
         $longestPaths = [];
-        
+
         foreach ($resolvedSteps as $step) {
             $longestPaths[$step->getPackage()] = $this->calculateLongestPath($step, $resolvedSteps);
         }
-        
+
         // The critical path is the longest path in the graph
         $maxLength = max($longestPaths);
-        
+
         foreach ($longestPaths as $package => $length) {
             if ($length === $maxLength) {
                 $criticalPath[] = $package;
             }
         }
-        
+
         return $criticalPath;
     }
 
@@ -286,13 +284,13 @@ class DependencyResolver
     protected function calculateLongestPath(ExecutionStep $step, Collection $allSteps): int
     {
         $dependencies = $step->getResolvedDependencies();
-        
+
         if (empty($dependencies)) {
             return 1;
         }
-        
+
         $maxDependencyPath = 0;
-        
+
         foreach ($dependencies as $dependency) {
             $dependencyStep = $allSteps->firstWhere('package', $dependency);
             if ($dependencyStep) {
@@ -300,7 +298,7 @@ class DependencyResolver
                 $maxDependencyPath = max($maxDependencyPath, $path);
             }
         }
-        
+
         return $maxDependencyPath + 1;
     }
 
@@ -315,7 +313,7 @@ class DependencyResolver
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -325,14 +323,14 @@ class DependencyResolver
     public function getDependents(string $package, Collection $steps): array
     {
         $dependents = [];
-        
+
         foreach ($steps as $step) {
             $dependencies = $this->getDependenciesForPackage($step->getPackage(), $steps);
             if (in_array($package, $dependencies)) {
                 $dependents[] = $step->getPackage();
             }
         }
-        
+
         return $dependents;
     }
 
@@ -341,11 +339,11 @@ class DependencyResolver
      */
     public function addDependency(string $package, string $dependency): void
     {
-        if (!isset($this->dependencyMatrix[$package])) {
+        if (! isset($this->dependencyMatrix[$package])) {
             $this->dependencyMatrix[$package] = [];
         }
-        
-        if (!in_array($dependency, $this->dependencyMatrix[$package])) {
+
+        if (! in_array($dependency, $this->dependencyMatrix[$package])) {
             $this->dependencyMatrix[$package][] = $dependency;
         }
     }
@@ -357,7 +355,7 @@ class DependencyResolver
     {
         if (isset($this->dependencyMatrix[$package])) {
             $this->dependencyMatrix[$package] = array_diff(
-                $this->dependencyMatrix[$package], 
+                $this->dependencyMatrix[$package],
                 [$dependency]
             );
         }

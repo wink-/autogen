@@ -42,7 +42,7 @@ class LocalLLMProvider extends BaseAIProvider
 
     protected function hasRequiredCredentials(): bool
     {
-        return !empty($this->getConfigValue('endpoint'));
+        return ! empty($this->getConfigValue('endpoint'));
     }
 
     protected function makeRequest(string $endpoint, array $data = []): array

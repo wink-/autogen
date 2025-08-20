@@ -16,14 +16,14 @@ class FakerHelpers
     {
         $firstName = $faker->firstName();
         $lastName = $faker->lastName();
-        $username = strtolower($firstName . $lastName . $faker->numberBetween(1, 999));
-        
+        $username = strtolower($firstName.$lastName.$faker->numberBetween(1, 999));
+
         return [
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'full_name' => $firstName . ' ' . $lastName,
+            'full_name' => $firstName.' '.$lastName,
             'username' => $username,
-            'email' => $username . '@' . $faker->safeEmailDomain(),
+            'email' => $username.'@'.$faker->safeEmailDomain(),
         ];
     }
 
@@ -33,13 +33,13 @@ class FakerHelpers
     public static function companyProfile(Faker $faker): array
     {
         $company = $faker->company();
-        
+
         return [
             'name' => $company,
             'slug' => Str::slug($company),
-            'email' => 'info@' . strtolower(str_replace(' ', '', $company)) . '.com',
+            'email' => 'info@'.strtolower(str_replace(' ', '', $company)).'.com',
             'phone' => $faker->phoneNumber(),
-            'website' => 'https://www.' . strtolower(str_replace(' ', '', $company)) . '.com',
+            'website' => 'https://www.'.strtolower(str_replace(' ', '', $company)).'.com',
         ];
     }
 
@@ -65,7 +65,7 @@ class FakerHelpers
     {
         $name = $faker->words(3, true);
         $price = $faker->randomFloat(2, 10, 1000);
-        
+
         return [
             'name' => $name,
             'slug' => Str::slug($name),
@@ -83,7 +83,7 @@ class FakerHelpers
     public static function blogPost(Faker $faker): array
     {
         $title = $faker->sentence(6, false);
-        
+
         return [
             'title' => $title,
             'slug' => Str::slug($title),
@@ -113,7 +113,7 @@ class FakerHelpers
     public static function socialMediaProfile(Faker $faker): array
     {
         $username = $faker->userName();
-        
+
         return [
             'username' => $username,
             'display_name' => $faker->name(),
@@ -131,7 +131,7 @@ class FakerHelpers
     public static function inventoryData(Faker $faker): array
     {
         $inStock = $faker->boolean(80);
-        
+
         return [
             'quantity' => $inStock ? $faker->numberBetween(1, 100) : 0,
             'reserved_quantity' => $faker->numberBetween(0, 10),
@@ -150,7 +150,7 @@ class FakerHelpers
         $taxRate = 0.08;
         $tax = $subtotal * $taxRate;
         $shipping = $faker->randomFloat(2, 0, 25);
-        
+
         return [
             'order_number' => $faker->bothify('ORD-####-####'),
             'subtotal' => $subtotal,
@@ -167,8 +167,8 @@ class FakerHelpers
     public static function eventData(Faker $faker): array
     {
         $startDate = $faker->dateTimeBetween('now', '+6 months');
-        $endDate = $faker->dateTimeBetween($startDate, $startDate->format('Y-m-d H:i:s') . ' +4 hours');
-        
+        $endDate = $faker->dateTimeBetween($startDate, $startDate->format('Y-m-d H:i:s').' +4 hours');
+
         return [
             'title' => $faker->sentence(4, false),
             'description' => $faker->paragraph(3),
@@ -186,10 +186,10 @@ class FakerHelpers
     public static function apiCredentials(Faker $faker): array
     {
         return [
-            'api_key' => 'ak_' . $faker->bothify('????_????????????????????????'),
-            'api_secret' => 'as_' . $faker->bothify('????_????????????????????????????????'),
-            'access_token' => 'at_' . $faker->bothify('????????????????????????????????'),
-            'refresh_token' => 'rt_' . $faker->bothify('????????????????????????????????'),
+            'api_key' => 'ak_'.$faker->bothify('????_????????????????????????'),
+            'api_secret' => 'as_'.$faker->bothify('????_????????????????????????????????'),
+            'access_token' => 'at_'.$faker->bothify('????????????????????????????????'),
+            'refresh_token' => 'rt_'.$faker->bothify('????????????????????????????????'),
         ];
     }
 
@@ -201,7 +201,7 @@ class FakerHelpers
         $plans = ['basic', 'premium', 'enterprise'];
         $plan = $faker->randomElement($plans);
         $startDate = $faker->dateTimeBetween('-1 year', 'now');
-        
+
         return [
             'plan' => $plan,
             'status' => $faker->randomElement(['active', 'cancelled', 'expired', 'trial']),
@@ -218,13 +218,13 @@ class FakerHelpers
     {
         $extensions = ['pdf', 'doc', 'docx', 'jpg', 'png', 'gif', 'mp4', 'mp3'];
         $extension = $faker->randomElement($extensions);
-        
+
         return [
-            'filename' => $faker->word() . '.' . $extension,
-            'original_name' => $faker->words(3, true) . '.' . $extension,
+            'filename' => $faker->word().'.'.$extension,
+            'original_name' => $faker->words(3, true).'.'.$extension,
             'mime_type' => $faker->mimeType(),
             'size' => $faker->numberBetween(1024, 10485760), // 1KB to 10MB
-            'path' => 'uploads/' . $faker->year() . '/' . $faker->month() . '/',
+            'path' => 'uploads/'.$faker->year().'/'.$faker->month().'/',
         ];
     }
 
@@ -234,7 +234,7 @@ class FakerHelpers
     public static function reviewData(Faker $faker): array
     {
         $rating = $faker->numberBetween(1, 5);
-        
+
         return [
             'rating' => $rating,
             'title' => $faker->sentence(4, false),

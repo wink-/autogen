@@ -5,23 +5,22 @@ declare(strict_types=1);
 namespace AutoGen\Common\Analysis;
 
 use AutoGen\Common\Contracts\CodeAnalyzerInterface;
-use AutoGen\Common\Traits\HasConfiguration;
 use AutoGen\Common\Traits\HandlesFiles;
+use AutoGen\Common\Traits\HasConfiguration;
 use AutoGen\Common\Traits\ValidatesInput;
 use PhpParser\Error;
-use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 
 class CodeAnalyzer implements CodeAnalyzerInterface
 {
-    use HasConfiguration;
     use HandlesFiles;
+    use HasConfiguration;
     use ValidatesInput;
 
     protected Parser $parser;
+
     protected NodeTraverser $traverser;
 
     /**
@@ -39,13 +38,13 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     public function analyzeFile(string $filePath): array
     {
         $this->validateFilePath($filePath);
-        
-        if (!$this->hasAllowedExtension($filePath, ['php'])) {
+
+        if (! $this->hasAllowedExtension($filePath, ['php'])) {
             return ['error' => 'Unsupported file type'];
         }
 
         $code = $this->readFile($filePath);
-        
+
         return array_merge(
             $this->analyzeCode($code),
             ['file_path' => $filePath]
@@ -65,7 +64,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
 
         try {
             $ast = $this->parser->parse($code);
-            
+
             if ($ast === null) {
                 return ['error' => 'Failed to parse code'];
             }
@@ -80,7 +79,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
             ];
         } catch (Error $e) {
             return [
-                'error' => 'Parse error: ' . $e->getMessage(),
+                'error' => 'Parse error: '.$e->getMessage(),
                 'line' => $e->getStartLine(),
             ];
         }
@@ -92,7 +91,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     public function analyzeDirectory(string $directoryPath): array
     {
         $this->validateFilePath($directoryPath);
-        
+
         $phpFiles = $this->getFilesInDirectory($directoryPath, ['php']);
         $results = [
             'directory' => $directoryPath,
@@ -110,9 +109,9 @@ class CodeAnalyzer implements CodeAnalyzerInterface
         foreach ($phpFiles as $file) {
             $analysis = $this->analyzeFile($file);
             $results['files'][] = $analysis;
-            
+
             // Aggregate summary data
-            if (!isset($analysis['error'])) {
+            if (! isset($analysis['error'])) {
                 $results['summary']['total_lines'] += $analysis['metrics']['lines_of_code'] ?? 0;
                 $results['summary']['total_methods'] += $analysis['metrics']['methods_count'] ?? 0;
                 $results['summary']['total_classes'] += $analysis['metrics']['classes_count'] ?? 0;
@@ -122,8 +121,8 @@ class CodeAnalyzer implements CodeAnalyzerInterface
 
         // Calculate averages
         if ($results['total_files'] > 0) {
-            $results['summary']['average_complexity'] = 
-                ($results['summary']['total_methods'] > 0) 
+            $results['summary']['average_complexity'] =
+                ($results['summary']['total_methods'] > 0)
                     ? round($results['summary']['total_lines'] / $results['summary']['total_methods'], 2)
                     : 0;
         }
@@ -137,8 +136,8 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     public function getMetrics(string $code): array
     {
         $lines = explode("\n", $code);
-        $nonEmptyLines = array_filter($lines, fn($line) => trim($line) !== '');
-        $commentLines = array_filter($lines, fn($line) => preg_match('/^\s*\/\/|^\s*\/\*|\s*\*/', $line));
+        $nonEmptyLines = array_filter($lines, fn ($line) => trim($line) !== '');
+        $commentLines = array_filter($lines, fn ($line) => preg_match('/^\s*\/\/|^\s*\/\*|\s*\*/', $line));
 
         return [
             'total_lines' => count($lines),
@@ -206,8 +205,8 @@ class CodeAnalyzer implements CodeAnalyzerInterface
         $lines = explode("\n", $code);
         $lineCounts = array_count_values(array_map('trim', $lines));
         foreach ($lineCounts as $line => $count) {
-            if ($count > 3 && strlen($line) > 20 && !empty($line)) {
-                $smells[] = ['type' => 'duplicate_code', 'message' => "Duplicate line found {$count} times: " . substr($line, 0, 50)];
+            if ($count > 3 && strlen($line) > 20 && ! empty($line)) {
+                $smells[] = ['type' => 'duplicate_code', 'message' => "Duplicate line found {$count} times: ".substr($line, 0, 50)];
             }
         }
 
@@ -221,7 +220,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     {
         // Simple cyclomatic complexity calculation
         $complexity = 1; // Base complexity
-        
+
         // Add complexity for control structures
         $complexity += substr_count($code, 'if ');
         $complexity += substr_count($code, 'else if ');
@@ -250,7 +249,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
         $issues = [];
 
         // PSR-1 checks
-        if (!preg_match('/^<\?php/', $code)) {
+        if (! preg_match('/^<\?php/', $code)) {
             $issues[] = ['psr' => 'PSR-1', 'message' => 'Files should start with <?php tag'];
         }
 
@@ -277,7 +276,7 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     protected function initializeParser(): void
     {
         $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $this->traverser = new NodeTraverser();
+        $this->traverser = new NodeTraverser;
     }
 
     /**
@@ -297,10 +296,10 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     protected function calculateASTDepth(array $nodes, int $currentDepth = 0): int
     {
         $maxDepth = $currentDepth;
-        
+
         // This is a simplified depth calculation
         // In a real implementation, you'd traverse the actual AST nodes
-        
+
         return $maxDepth;
     }
 
@@ -309,9 +308,16 @@ class CodeAnalyzer implements CodeAnalyzerInterface
      */
     protected function getComplexityRating(int $complexity): string
     {
-        if ($complexity <= 10) return 'Low';
-        if ($complexity <= 20) return 'Moderate';
-        if ($complexity <= 50) return 'High';
+        if ($complexity <= 10) {
+            return 'Low';
+        }
+        if ($complexity <= 20) {
+            return 'Moderate';
+        }
+        if ($complexity <= 50) {
+            return 'High';
+        }
+
         return 'Very High';
     }
 
@@ -322,15 +328,17 @@ class CodeAnalyzer implements CodeAnalyzerInterface
     {
         $metrics = $this->getMetrics($code);
         $complexity = $this->getComplexityAnalysis($code);
-        
+
         // Simplified maintainability index calculation
         $loc = $metrics['lines_of_code'];
         $cc = $complexity['cyclomatic_complexity'];
-        
-        if ($loc === 0) return 100.0;
-        
+
+        if ($loc === 0) {
+            return 100.0;
+        }
+
         $mi = max(0, (171 - 5.2 * log($loc) - 0.23 * $cc) * 100 / 171);
-        
+
         return round($mi, 2);
     }
 }

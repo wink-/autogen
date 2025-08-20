@@ -112,9 +112,9 @@ class User extends Model
     
     protected $connection = self::CONNECTION;
     protected $table = 'users';
-    protected readonly string $primaryKey = 'id';
-    public readonly bool $incrementing = true;
-    protected readonly string $keyType = 'int';
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = true;
     
     protected $fillable = [
@@ -316,7 +316,7 @@ The generator handles composite primary keys:
 
 ```php
 protected readonly array $primaryKey = ['user_id', 'role_id'];
-public readonly bool $incrementing = false;
+public $incrementing = false;
 ```
 
 ### Polymorphic Relationships

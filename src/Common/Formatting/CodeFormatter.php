@@ -30,16 +30,16 @@ class CodeFormatter implements CodeFormatterInterface
 
         // Remove extra whitespace
         $code = $this->normalizeWhitespace($code);
-        
+
         // Fix indentation
         $code = $this->fixIndentation($code);
-        
+
         // Fix line endings
         $code = $this->fixLineEndings($code);
-        
+
         // Add final newline if configured
         if ($this->getConfigValue('final_newline', true)) {
-            $code = rtrim($code) . "\n";
+            $code = rtrim($code)."\n";
         }
 
         return $code;
@@ -51,7 +51,7 @@ class CodeFormatter implements CodeFormatterInterface
     public function formatJavaScript(string $code): string
     {
         $this->validateNotEmpty($code, 'code');
-        
+
         // Basic JavaScript formatting
         // In a real implementation, this would use a proper JS formatter
         return $this->normalizeWhitespace($code);
@@ -63,14 +63,20 @@ class CodeFormatter implements CodeFormatterInterface
     public function formatJson(string $code): string
     {
         $this->validateNotEmpty($code, 'code');
-        
-        $decoded = json_decode($code, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
+
+        try {
+            $decoded = json_decode($code, true, 512, JSON_THROW_ON_ERROR);
+
+            if (! is_array($decoded) && ! is_object($decoded)) {
+                return $code; // Return original if not valid JSON structure
+            }
+
+            $formatted = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+            return $formatted ?: $code; // Fallback to original if encoding fails
+        } catch (\JsonException) {
             return $code; // Return original if invalid JSON
         }
-
-        return json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     /**
@@ -97,7 +103,7 @@ class CodeFormatter implements CodeFormatterInterface
         $this->validateNotEmpty($code, 'code');
 
         $effectiveRules = array_merge($this->getConfigValue('rules', []), $rules);
-        
+
         // Apply various style fixes based on rules
         foreach ($effectiveRules as $rule => $enabled) {
             if ($enabled) {
@@ -120,7 +126,7 @@ class CodeFormatter implements CodeFormatterInterface
         // Check line length
         $maxLength = $this->getConfigValue('line_length', 120);
         $lines = explode("\n", $code);
-        
+
         foreach ($lines as $lineNumber => $line) {
             if (strlen($line) > $maxLength) {
                 $issues[] = [
@@ -134,7 +140,7 @@ class CodeFormatter implements CodeFormatterInterface
         // Check indentation
         $indentType = $this->getConfigValue('indent_type', 'space');
         $incorrectIndent = $indentType === 'space' ? "\t" : '    ';
-        
+
         foreach ($lines as $lineNumber => $line) {
             if (str_starts_with($line, $incorrectIndent)) {
                 $issues[] = [
@@ -199,11 +205,11 @@ class CodeFormatter implements CodeFormatterInterface
         // Remove trailing whitespace from each line
         $lines = explode("\n", $code);
         $lines = array_map('rtrim', $lines);
-        
+
         // Remove excessive blank lines (more than 2 consecutive)
         $normalized = [];
         $blankCount = 0;
-        
+
         foreach ($lines as $line) {
             if (trim($line) === '') {
                 $blankCount++;
@@ -229,15 +235,16 @@ class CodeFormatter implements CodeFormatterInterface
         $indentType = $this->getConfigValue('indent_type', 'space');
         $indentChar = $indentType === 'space' ? ' ' : "\t";
         $indentUnit = $indentType === 'space' ? str_repeat(' ', $indentSize) : "\t";
-        
+
         $indentLevel = 0;
         $fixedLines = [];
 
         foreach ($lines as $line) {
             $trimmedLine = ltrim($line);
-            
+
             if (empty($trimmedLine)) {
                 $fixedLines[] = '';
+
                 continue;
             }
 
@@ -247,7 +254,7 @@ class CodeFormatter implements CodeFormatterInterface
             }
 
             // Apply correct indentation
-            $fixedLines[] = str_repeat($indentUnit, $indentLevel) . $trimmedLine;
+            $fixedLines[] = str_repeat($indentUnit, $indentLevel).$trimmedLine;
 
             // Increase indent level after opening brace
             if (preg_match('/{\s*$/', $trimmedLine)) {
@@ -264,10 +271,10 @@ class CodeFormatter implements CodeFormatterInterface
     protected function fixLineEndings(string $code): string
     {
         $lineEnding = $this->getConfigValue('line_ending', 'lf');
-        
+
         // Normalize to LF first
         $code = str_replace(["\r\n", "\r"], "\n", $code);
-        
+
         // Convert to desired line ending
         return match ($lineEnding) {
             'crlf' => str_replace("\n", "\r\n", $code),

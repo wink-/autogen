@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Views\Commands;
 
+use AutoGen\Packages\Views\Generators\ViewGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use AutoGen\Packages\Views\Generators\ViewGenerator;
 
 class ViewGeneratorCommand extends Command
 {
@@ -46,19 +46,21 @@ class ViewGeneratorCommand extends Command
         $force = $this->option('force');
 
         // Validate framework option
-        if (!in_array($framework, ['tailwind', 'bootstrap', 'css'])) {
+        if (! in_array($framework, ['tailwind', 'bootstrap', 'css'])) {
             $this->error("Invalid framework: {$framework}. Must be one of: tailwind, bootstrap, css");
+
             return Command::FAILURE;
         }
 
         // Parse model path
         $modelPath = str_replace('/', '\\', $modelName);
         $modelClass = "App\\Models\\{$modelPath}";
-        
+
         // Check if model exists
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             $this->error("Model {$modelClass} does not exist.");
             $this->line('Please run `php artisan autogen:model` first to generate the model.');
+
             return Command::FAILURE;
         }
 
@@ -67,10 +69,11 @@ class ViewGeneratorCommand extends Command
         if ($only) {
             $viewsToGenerate = array_map('trim', explode(',', $only));
             $validViews = ['index', 'create', 'edit', 'show', 'form', 'table', 'filters'];
-            
+
             foreach ($viewsToGenerate as $view) {
-                if (!in_array($view, $validViews)) {
-                    $this->error("Invalid view type: {$view}. Valid types are: " . implode(', ', $validViews));
+                if (! in_array($view, $validViews)) {
+                    $this->error("Invalid view type: {$view}. Valid types are: ".implode(', ', $validViews));
+
                     return Command::FAILURE;
                 }
             }
@@ -98,21 +101,22 @@ class ViewGeneratorCommand extends Command
 
             $this->newLine();
             $this->info('Views generated successfully!');
-            
+
             // Show next steps
             $this->newLine();
             $this->comment('Next steps:');
             $this->comment('1. Add routes for your resource:');
-            $this->line("   Route::resource('" . Str::plural(Str::snake(class_basename($modelName))) . "', {$modelName}Controller::class);");
+            $this->line("   Route::resource('".Str::plural(Str::snake(class_basename($modelName)))."', {$modelName}Controller::class);");
             $this->comment('2. Run `npm run dev` or `npm run build` to compile your assets');
-            
+
             if ($withDatatable) {
                 $this->comment('3. Install DataTables dependencies if not already installed');
             }
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to generate views: ' . $e->getMessage());
+            $this->error('Failed to generate views: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }

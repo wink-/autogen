@@ -4,32 +4,26 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Factory;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
-use Illuminate\Database\Eloquent\Model;
-use ReflectionClass;
 use AutoGen\Packages\Model\DatabaseIntrospector;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use ReflectionClass;
 
 class FactoryGenerator
 {
     /**
      * The fake data mapper instance.
-     *
-     * @var FakeDataMapper
      */
     protected FakeDataMapper $fakeDataMapper;
 
     /**
      * The relationship factory handler instance.
-     *
-     * @var RelationshipFactoryHandler
      */
     protected RelationshipFactoryHandler $relationshipHandler;
 
     /**
      * The database introspector instance.
-     *
-     * @var DatabaseIntrospector
      */
     protected DatabaseIntrospector $introspector;
 
@@ -54,37 +48,37 @@ class FactoryGenerator
         try {
             // Resolve model class
             $modelClass = $this->resolveModelClass($modelName);
-            
-            if (!$modelClass) {
+
+            if (! $modelClass) {
                 return [
                     'success' => false,
-                    'error' => "Model class not found: {$modelName}"
+                    'error' => "Model class not found: {$modelName}",
                 ];
             }
 
             // Get model metadata
             $modelMetadata = $this->getModelMetadata($modelClass);
-            
+
             // Generate factory content
             $factoryContent = $this->generateFactoryContent($modelName, $modelMetadata, $config);
-            
+
             // Write factory file
             $factoryPath = $this->getFactoryPath($modelName);
             $this->ensureDirectoryExists(dirname($factoryPath));
-            
+
             File::put($factoryPath, $factoryContent);
-            
+
             return [
                 'success' => true,
                 'path' => $factoryPath,
                 'states' => $modelMetadata['states'] ?? [],
-                'relationships' => $modelMetadata['relationships'] ?? []
+                'relationships' => $modelMetadata['relationships'] ?? [],
             ];
-            
+
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -96,20 +90,20 @@ class FactoryGenerator
     {
         $templateName = $this->getTemplateName($config['template']);
         $stubPath = $this->getStubPath($templateName);
-        
-        if (!File::exists($stubPath)) {
+
+        if (! File::exists($stubPath)) {
             throw new \RuntimeException("Factory template not found: {$stubPath}");
         }
-        
+
         $stub = File::get($stubPath);
-        
+
         // Replace placeholders
         $replacements = $this->getReplacements($modelName, $metadata, $config);
-        
+
         foreach ($replacements as $search => $replace) {
             $stub = str_replace($search, $replace, $stub);
         }
-        
+
         return $stub;
     }
 
@@ -121,12 +115,12 @@ class FactoryGenerator
         $modelClass = $metadata['class'];
         $tableName = $metadata['table'];
         $fillableFields = $metadata['fillable'];
-        
+
         return [
             '{{ namespace }}' => $this->getFactoryNamespace(),
             '{{ modelNamespace }}' => $this->getModelNamespace($modelClass),
             '{{ modelClass }}' => $modelName,
-            '{{ factoryClass }}' => $modelName . 'Factory',
+            '{{ factoryClass }}' => $modelName.'Factory',
             '{{ definition }}' => $this->generateDefinition($fillableFields, $config),
             '{{ states }}' => $config['with_states'] ? $this->generateStates($metadata, $config) : '',
             '{{ relationships }}' => $config['with_relationships'] ? $this->generateRelationshipMethods($metadata, $config) : '',
@@ -140,12 +134,12 @@ class FactoryGenerator
     protected function generateDefinition(array $fillableFields, array $config): string
     {
         $definitions = [];
-        
+
         foreach ($fillableFields as $field) {
             $fakeData = $this->fakeDataMapper->mapFieldToFakeData($field, $config['locale']);
             $definitions[] = "            '{$field['name']}' => {$fakeData},";
         }
-        
+
         return implode("\n", $definitions);
     }
 
@@ -156,14 +150,14 @@ class FactoryGenerator
     {
         $states = [];
         $fillableFields = $metadata['fillable'];
-        
+
         // Generate common states based on field analysis
         $stateFields = $this->identifyStateFields($fillableFields);
-        
+
         foreach ($stateFields as $field => $stateConfigs) {
             foreach ($stateConfigs as $stateName => $stateValue) {
                 $methodName = Str::camel($stateName);
-                
+
                 $states[] = "
     /**
      * Indicate that the model is {$stateName}.
@@ -176,7 +170,7 @@ class FactoryGenerator
     }";
             }
         }
-        
+
         return implode("\n", $states);
     }
 
@@ -188,7 +182,7 @@ class FactoryGenerator
         if (empty($metadata['relationships'])) {
             return '';
         }
-        
+
         return $this->relationshipHandler->generateMethods($metadata['relationships'], $config);
     }
 
@@ -198,13 +192,13 @@ class FactoryGenerator
     protected function generateImports(array $config): string
     {
         $imports = [
-            'use Illuminate\Database\Eloquent\Factories\Factory;'
+            'use Illuminate\Database\Eloquent\Factories\Factory;',
         ];
-        
+
         if ($config['locale'] !== 'en_US') {
             $imports[] = 'use Faker\Generator as Faker;';
         }
-        
+
         return implode("\n", $imports);
     }
 
@@ -213,21 +207,21 @@ class FactoryGenerator
      */
     protected function getModelMetadata(string $modelClass): array
     {
-        $model = new $modelClass();
+        $model = new $modelClass;
         $reflection = new ReflectionClass($modelClass);
-        
+
         // Get table name
         $tableName = $model->getTable();
-        
+
         // Get fillable fields from database structure
         $fillableFields = $this->getFillableFieldsFromDatabase($modelClass, $tableName);
-        
+
         // Get relationships
         $relationships = $this->getModelRelationships($reflection);
-        
+
         // Identify state fields
         $stateFields = $this->identifyStateFields($fillableFields);
-        
+
         return [
             'class' => $modelClass,
             'table' => $tableName,
@@ -246,14 +240,14 @@ class FactoryGenerator
             // Try to get from database introspection
             $connection = config('database.default');
             $tableStructure = $this->introspector->introspectTable($connection, $tableName);
-            
+
             $fillableFields = [];
             foreach ($tableStructure['columns'] as $column) {
                 // Skip timestamps and primary keys
                 if (in_array($column['name'], ['id', 'created_at', 'updated_at', 'deleted_at'])) {
                     continue;
                 }
-                
+
                 $fillableFields[] = [
                     'name' => $column['name'],
                     'type' => $column['type'],
@@ -261,14 +255,14 @@ class FactoryGenerator
                     'default' => $column['default'] ?? null,
                 ];
             }
-            
+
             return $fillableFields;
-            
+
         } catch (\Exception $e) {
             // Fallback to model's fillable property
-            $model = new $modelClass();
+            $model = new $modelClass;
             $fillable = $model->getFillable();
-            
+
             return array_map(function ($field) {
                 return [
                     'name' => $field,
@@ -286,18 +280,18 @@ class FactoryGenerator
     protected function getModelRelationships(ReflectionClass $reflection): array
     {
         $relationships = [];
-        
+
         foreach ($reflection->getMethods() as $method) {
-            if ($method->isPublic() && 
-                !$method->isStatic() && 
+            if ($method->isPublic() &&
+                ! $method->isStatic() &&
                 $method->getNumberOfParameters() === 0 &&
-                !in_array($method->getName(), ['toArray', 'toJson', 'getAttribute'])) {
-                
+                ! in_array($method->getName(), ['toArray', 'toJson', 'getAttribute'])) {
+
                 // Check if method returns a relationship
                 $returnType = $method->getReturnType();
-                if ($returnType && 
+                if ($returnType &&
                     str_contains($returnType->getName(), 'Illuminate\Database\Eloquent\Relations')) {
-                    
+
                     $relationships[] = [
                         'method' => $method->getName(),
                         'type' => class_basename($returnType->getName()),
@@ -305,7 +299,7 @@ class FactoryGenerator
                 }
             }
         }
-        
+
         return $relationships;
     }
 
@@ -315,11 +309,11 @@ class FactoryGenerator
     protected function identifyStateFields(array $fillableFields): array
     {
         $stateFields = [];
-        
+
         foreach ($fillableFields as $field) {
             $fieldName = $field['name'];
             $fieldType = $field['type'];
-            
+
             // Status fields
             if (str_contains($fieldName, 'status')) {
                 $stateFields[$fieldName] = [
@@ -327,16 +321,16 @@ class FactoryGenerator
                     'inactive' => "'inactive'",
                 ];
             }
-            
+
             // Boolean fields
             if (in_array($fieldType, ['boolean', 'tinyint(1)'])) {
                 $baseName = str_replace(['is_', 'has_', 'can_'], '', $fieldName);
                 $stateFields[$fieldName] = [
                     $baseName => 'true',
-                    'without_' . $baseName => 'false',
+                    'without_'.$baseName => 'false',
                 ];
             }
-            
+
             // Email verification
             if ($fieldName === 'email_verified_at') {
                 $stateFields[$fieldName] = [
@@ -345,7 +339,7 @@ class FactoryGenerator
                 ];
             }
         }
-        
+
         return $stateFields;
     }
 
@@ -359,14 +353,14 @@ class FactoryGenerator
             'App\\Models\\',
             'App\\',
         ];
-        
+
         foreach ($namespaces as $namespace) {
-            $class = $namespace . $modelName;
+            $class = $namespace.$modelName;
             if (class_exists($class)) {
                 return $class;
             }
         }
-        
+
         return null;
     }
 
@@ -392,7 +386,8 @@ class FactoryGenerator
     protected function getModelNamespace(string $modelClass): string
     {
         $reflection = new ReflectionClass($modelClass);
-        return $reflection->getNamespaceName() . '\\' . $reflection->getShortName();
+
+        return $reflection->getNamespaceName().'\\'.$reflection->getShortName();
     }
 
     /**
@@ -401,7 +396,7 @@ class FactoryGenerator
     protected function getTemplateName(string $template): string
     {
         $validTemplates = ['minimal', 'default', 'advanced'];
-        
+
         return in_array($template, $validTemplates) ? $template : 'default';
     }
 
@@ -410,7 +405,7 @@ class FactoryGenerator
      */
     protected function getStubPath(string $template): string
     {
-        return __DIR__ . "/Stubs/factory.{$template}.stub";
+        return __DIR__."/Stubs/factory.{$template}.stub";
     }
 
     /**
@@ -418,7 +413,7 @@ class FactoryGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::isDirectory($directory)) {
+        if (! File::isDirectory($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

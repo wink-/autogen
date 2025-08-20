@@ -15,7 +15,7 @@ class ScaffoldServiceProvider extends ServiceProvider
     {
         // Register configuration
         $this->mergeConfigFrom(
-            __DIR__ . '/config/scaffold.php',
+            __DIR__.'/config/scaffold.php',
             'autogen.scaffold'
         );
 
@@ -23,7 +23,7 @@ class ScaffoldServiceProvider extends ServiceProvider
         $this->app->singleton(DependencyResolver::class);
         $this->app->singleton(ProgressTracker::class);
         $this->app->singleton(ConfigurationValidator::class);
-        
+
         // Register workflow orchestrator with dependencies
         $this->app->singleton(WorkflowOrchestrator::class, function ($app) {
             return new WorkflowOrchestrator(
@@ -51,7 +51,7 @@ class ScaffoldServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish configuration
             $this->publishes([
-                __DIR__ . '/config/scaffold.php' => config_path('autogen/scaffold.php'),
+                __DIR__.'/config/scaffold.php' => config_path('autogen/scaffold.php'),
             ], 'autogen-scaffold-config');
 
             // Register the scaffold command
@@ -71,7 +71,7 @@ class ScaffoldServiceProvider extends ServiceProvider
     {
         // Listen to progress events and log them
         $tracker = $this->app->make(ProgressTracker::class);
-        
+
         $tracker->onProgress('started', function ($data) {
             logger()->info('Scaffold generation started', $data);
         });

@@ -6,8 +6,6 @@ namespace AutoGen\Tests\Unit\Packages\Model;
 
 use AutoGen\Packages\Model\ModelGenerator;
 use AutoGen\Tests\TestCase;
-use AutoGen\Tests\Helpers\DatabaseTestHelper;
-use AutoGen\Tests\Helpers\FileTestHelper;
 use Illuminate\Support\Facades\File;
 
 class ModelGeneratorTest extends TestCase
@@ -17,7 +15,7 @@ class ModelGeneratorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->generator = new ModelGenerator();
+        $this->generator = new ModelGenerator;
     }
 
     /** @test */
@@ -28,7 +26,7 @@ class ModelGeneratorTest extends TestCase
 
         $this->generator->generate(
             'testing',
-            'users', 
+            'users',
             $tableStructure,
             [],
             $config
@@ -106,7 +104,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('User');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString("'name'", $content);
         $this->assertStringContainsString("'email'", $content);
         $this->assertStringContainsString("'password'", $content);
@@ -143,7 +141,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('User');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString("'password'", $content);
         $this->assertStringContainsString("'remember_token'", $content);
         $this->assertStringContainsString("'api_token'", $content);
@@ -177,7 +175,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('SampleTable');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString("'is_active' => 'boolean'", $content);
         $this->assertStringContainsString("'price' => 'decimal:2'", $content);
         $this->assertStringContainsString("'metadata' => 'array'", $content);
@@ -202,7 +200,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('User');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString('use Illuminate\\Database\\Eloquent\\SoftDeletes', $content);
         $this->assertStringContainsString('use HasFactory, SoftDeletes', $content);
     }
@@ -239,15 +237,15 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('Post');
         $content = File::get($modelPath);
-        
+
         // Check belongsTo relationship
         $this->assertStringContainsString('public function user(): BelongsTo', $content);
         $this->assertStringContainsString("return \$this->belongsTo(User::class, 'user_id', 'id')", $content);
-        
+
         // Check hasMany relationship
         $this->assertStringContainsString('public function comments(): HasMany', $content);
         $this->assertStringContainsString("return \$this->hasMany(Comment::class, 'post_id', 'id')", $content);
-        
+
         // Check relationship imports
         $this->assertStringContainsString('use Illuminate\\Database\\Eloquent\\Relations\\BelongsTo', $content);
         $this->assertStringContainsString('use Illuminate\\Database\\Eloquent\\Relations\\HasMany', $content);
@@ -278,7 +276,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('Post');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString('public function tags(): BelongsToMany', $content);
         $this->assertStringContainsString("return \$this->belongsToMany(Tag::class, 'post_tags', 'post_id', 'tag_id')", $content);
         $this->assertStringContainsString('use Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany', $content);
@@ -303,7 +301,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('Post');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString('public function scopeStatus($query, string $status)', $content);
         $this->assertStringContainsString('public function scopeActive($query)', $content);
         $this->assertStringContainsString('public function scopePublished($query)', $content);
@@ -328,11 +326,11 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('User');
         $content = File::get($modelPath);
-        
+
         // Check accessor
         $this->assertStringContainsString('protected function fullName(): Attribute', $content);
         $this->assertStringContainsString('use Illuminate\\Database\\Eloquent\\Casts\\Attribute', $content);
-        
+
         // Check mutator
         $this->assertStringContainsString('protected function password(): Attribute', $content);
         $this->assertStringContainsString('set: fn (string $value) => bcrypt($value)', $content);
@@ -356,7 +354,7 @@ class ModelGeneratorTest extends TestCase
 
         $expectedPath = app_path('Models/Blog/Post.php');
         $this->assertFileExists($expectedPath);
-        
+
         $content = File::get($expectedPath);
         $this->assertStringContainsString('namespace App\\Models\\Blog', $content);
     }
@@ -389,7 +387,7 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('User');
         $content = File::get($modelPath);
-        
+
         $this->assertStringContainsString('* @property-read int $id', $content);
         $this->assertStringContainsString('* @property string $name', $content);
         $this->assertStringContainsString('* @property ?string $email', $content);
@@ -421,10 +419,10 @@ class ModelGeneratorTest extends TestCase
 
         $modelPath = $this->getModelPath('Token');
         $content = File::get($modelPath);
-        
-        $this->assertStringContainsString("protected readonly string \$primaryKey = 'token'", $content);
-        $this->assertStringContainsString('public readonly bool $incrementing = false', $content);
-        $this->assertStringContainsString("protected readonly string \$keyType = 'string'", $content);
+
+        $this->assertStringContainsString("protected \$primaryKey = 'token'", $content);
+        $this->assertStringContainsString('public \$incrementing = false', $content);
+        $this->assertStringContainsString("protected \$keyType = 'string'", $content);
         $this->assertStringContainsString('public $timestamps = false', $content);
     }
 
@@ -432,7 +430,7 @@ class ModelGeneratorTest extends TestCase
     public function it_creates_model_directory_if_not_exists(): void
     {
         $config = ['dir' => 'Admin/Blog'];
-        
+
         $this->generator->generate(
             'testing',
             'posts',

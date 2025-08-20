@@ -14,7 +14,7 @@ class DocumentationGeneratorServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/documentation-generator.php',
+            __DIR__.'/config/documentation-generator.php',
             'autogen.documentation-generator'
         );
     }
@@ -26,7 +26,7 @@ class DocumentationGeneratorServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/documentation-generator.php' => config_path('autogen/documentation-generator.php'),
+                __DIR__.'/config/documentation-generator.php' => config_path('autogen/documentation-generator.php'),
             ], 'autogen-documentation-generator-config');
         }
     }

@@ -24,7 +24,7 @@ class PlainCssGenerator extends BaseFrameworkGenerator
 
     public function generateCss(): string
     {
-        return "/* AutoGen CRUD Styles */
+        return '/* AutoGen CRUD Styles */
 .autogen-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -234,7 +234,7 @@ class PlainCssGenerator extends BaseFrameworkGenerator
     align-items: center;
 }
 
-.autogen-checkbox input[type=\"checkbox\"] {
+.autogen-checkbox input[type="checkbox"] {
     width: auto;
     margin-right: 8px;
 }
@@ -415,7 +415,7 @@ class PlainCssGenerator extends BaseFrameworkGenerator
     .autogen-detail-grid {
         grid-template-columns: 1fr;
     }
-}";
+}';
     }
 
     protected function generateIndexView(): string
@@ -423,7 +423,7 @@ class PlainCssGenerator extends BaseFrameworkGenerator
         $modelVariable = $this->getModelPluralVariable();
         $modelName = $this->modelBaseName;
         $routeName = $this->getRouteResourceName();
-        
+
         $view = "@extends('{$this->layout}')
 
 @section('title', '{$modelName} Management')
@@ -446,10 +446,10 @@ class PlainCssGenerator extends BaseFrameworkGenerator
 ";
 
         if ($this->withSearch) {
-            $view .= "                    <button type=\"button\" class=\"autogen-button autogen-button-outline\" onclick=\"toggleFilters()\">
+            $view .= '                    <button type="button" class="autogen-button autogen-button-outline" onclick="toggleFilters()">
                         🔍 Filters
                     </button>
-";
+';
         }
 
         $view .= "                    <a href=\"{{ route('{$routeName}.create') }}\" class=\"autogen-button autogen-button-primary\">
@@ -496,9 +496,9 @@ class PlainCssGenerator extends BaseFrameworkGenerator
 ";
         }
 
-        $view .= "    </div>
+        $view .= '    </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -521,10 +521,10 @@ class PlainCssGenerator extends BaseFrameworkGenerator
 ";
         }
 
-        $view .= "
+        $view .= '
 
 <script>
-";
+';
 
         if ($this->withSearch) {
             $view .= "
@@ -568,11 +568,11 @@ $(document).ready(function() {
         ajax: '{{ route(\"{$routeName}.index\") }}',
         columns: [
 ";
-            
+
             foreach ($this->getTableColumns() as $column) {
                 $view .= "            {data: '{$column}', name: '{$column}'},\n";
             }
-            
+
             $view .= "            {data: 'action', name: 'action', orderable: false, searchable: false}
         ],
         responsive: true,
@@ -583,9 +583,9 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "
+        $view .= '
 </script>
-@endsection";
+@endsection';
 
         return $view;
     }
@@ -766,11 +766,11 @@ $(document).ready(function() {
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $fieldType = $this->getFieldType($field);
-            
+
             $view .= "                    <div class=\"autogen-detail-item\">
                         <div class=\"autogen-detail-label\">{$label}</div>
                         <div class=\"autogen-detail-value\">";
-            
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                             <span class=\"autogen-badge {{ \${$modelVariable}->{$field} ? 'autogen-badge-success' : 'autogen-badge-danger' }}\">
@@ -785,11 +785,11 @@ $(document).ready(function() {
             } else {
                 $view .= "{{ \${$modelVariable}->{$field} ?? 'Not set' }}";
             }
-            
-            $view .= "
+
+            $view .= '
                         </div>
                     </div>
-";
+';
         }
 
         // Add timestamps if they exist
@@ -809,12 +809,12 @@ $(document).ready(function() {
 ";
         }
 
-        $view .= "                </div>
+        $view .= '                </div>
             </div>
         </div>
     </div>
 </div>
-";
+';
 
         if ($this->withModals) {
             $view .= "
@@ -858,7 +858,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 ";
         }
 
-        $view .= "@endsection";
+        $view .= '@endsection';
 
         return $view;
     }
@@ -866,19 +866,19 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
     protected function generateFormPartial(): string
     {
         $modelVariable = $this->getModelVariable();
-        
+
         $view = "<!-- Form Fields -->\n";
-        
+
         foreach ($this->fillableFields as $field) {
             $label = $this->getFieldLabel($field);
             $type = $this->getFieldType($field);
             $placeholder = $this->getFieldPlaceholder($field);
             $validationAttrs = implode(' ', $this->getValidationAttributes($field));
             $errorClass = $type === 'checkbox' ? '' : " @error('{$field}') error @enderror";
-            
+
             $view .= "<div class=\"autogen-form-group\">\n";
             $view .= "    <label for=\"{$field}\" class=\"autogen-label\">{$label}</label>\n";
-            
+
             if ($type === 'textarea') {
                 $view .= "    <textarea name=\"{$field}\" id=\"{$field}\" rows=\"4\" class=\"autogen-textarea{$errorClass}\" placeholder=\"{$placeholder}\" {$validationAttrs}>{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}</textarea>\n";
             } elseif ($type === 'checkbox') {
@@ -889,13 +889,13 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
             } else {
                 $view .= "    <input type=\"{$type}\" name=\"{$field}\" id=\"{$field}\" class=\"autogen-input{$errorClass}\" placeholder=\"{$placeholder}\" value=\"{{ old('{$field}', \${$modelVariable}->{$field} ?? '') }}\" {$validationAttrs}>\n";
             }
-            
+
             $view .= "    @error('{$field}')\n";
             $view .= "        <div class=\"autogen-error-message\">{{ \$message }}</div>\n";
             $view .= "    @enderror\n";
             $view .= "</div>\n\n";
         }
-        
+
         return $view;
     }
 
@@ -906,11 +906,11 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
         $routeName = $this->getRouteResourceName();
         $columns = $this->getTableColumns();
 
-        $view = "<div class=\"autogen-card-body\" style=\"padding: 0; overflow-x: auto;\">
-    <table class=\"autogen-table\">
+        $view = '<div class="autogen-card-body" style="padding: 0; overflow-x: auto;">
+    <table class="autogen-table">
         <thead>
             <tr>
-";
+';
 
         foreach ($columns as $column) {
             $label = $this->getFieldLabel($column);
@@ -927,9 +927,9 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 
         foreach ($columns as $column) {
             $fieldType = $this->getFieldType($column);
-            
-            $view .= "                    <td>";
-            
+
+            $view .= '                    <td>';
+
             if ($fieldType === 'checkbox') {
                 $view .= "
                         <span class=\"autogen-badge {{ \${$singleModelVariable}->{$column} ? 'autogen-badge-success' : 'autogen-badge-danger' }}\">
@@ -942,7 +942,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
             } else {
                 $view .= "{{ \${$singleModelVariable}->{$column} }}";
             }
-            
+
             $view .= "</td>\n";
         }
 
@@ -976,12 +976,12 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
 ";
         }
 
-        $view .= "                        </div>
+        $view .= '                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan=\"" . (count($columns) + 1) . "\">
+                    <td colspan="'.(count($columns) + 1)."\">
                         <div class=\"autogen-empty-state\">
                             <div class=\"autogen-empty-icon\">📦</div>
                             <h3 style=\"margin: 0 0 8px 0; font-size: 1.125rem;\">No {$modelVariable} found</h3>
@@ -1070,7 +1070,7 @@ document.getElementById('deleteConfirm').addEventListener('click', function() {
         $parts = explode('/', $this->modelName);
         array_pop($parts); // Remove model name
         $parts[] = Str::snake($this->modelBaseName);
-        
-        return implode('.', array_map(fn($part) => Str::snake($part), $parts));
+
+        return implode('.', array_map(fn ($part) => Str::snake($part), $parts));
     }
 }

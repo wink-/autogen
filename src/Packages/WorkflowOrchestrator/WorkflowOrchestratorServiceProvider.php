@@ -14,7 +14,7 @@ class WorkflowOrchestratorServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/workflow-orchestrator.php',
+            __DIR__.'/config/workflow-orchestrator.php',
             'autogen.workflow-orchestrator'
         );
     }
@@ -26,7 +26,7 @@ class WorkflowOrchestratorServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/workflow-orchestrator.php' => config_path('autogen/workflow-orchestrator.php'),
+                __DIR__.'/config/workflow-orchestrator.php' => config_path('autogen/workflow-orchestrator.php'),
             ], 'autogen-workflow-orchestrator-config');
         }
     }

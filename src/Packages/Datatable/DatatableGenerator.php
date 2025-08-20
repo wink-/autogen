@@ -10,15 +10,25 @@ use Illuminate\Support\Str;
 class DatatableGenerator
 {
     protected string $modelName;
+
     protected string $type;
+
     protected bool $withExports;
+
     protected bool $withSearch;
+
     protected bool $withBulk;
+
     protected bool $cache;
+
     protected bool $virtualScroll;
+
     protected bool $cursorPagination;
+
     protected bool $backgroundJobs;
+
     protected bool $force;
+
     protected array $generatedFiles = [];
 
     public function __construct(
@@ -112,8 +122,8 @@ class DatatableGenerator
     protected function generateControllerMethods(): void
     {
         $controllerPath = $this->getControllerPath();
-        
-        if (!File::exists($controllerPath)) {
+
+        if (! File::exists($controllerPath)) {
             // Create a basic controller if it doesn't exist
             $this->createBasicController();
         } else {
@@ -137,7 +147,7 @@ class DatatableGenerator
         $stub = $this->getViewStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($viewPath) && !$this->force) {
+        if (File::exists($viewPath) && ! $this->force) {
             throw new \Exception("View already exists at: {$viewPath}");
         }
 
@@ -160,7 +170,7 @@ class DatatableGenerator
         $stub = $this->getJavaScriptStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($jsPath) && !$this->force) {
+        if (File::exists($jsPath) && ! $this->force) {
             throw new \Exception("JavaScript file already exists at: {$jsPath}");
         }
 
@@ -210,7 +220,7 @@ class DatatableGenerator
 
         // Check if datatable methods already exist
         if (str_contains($content, 'public function data(')) {
-            if (!$this->force) {
+            if (! $this->force) {
                 throw new \Exception("Datatable methods already exist in controller: {$controllerPath}");
             }
         }
@@ -222,7 +232,7 @@ class DatatableGenerator
         $content = preg_replace('/\n}\s*$/', "\n{$methods}\n}", $content);
 
         File::put($controllerPath, $content);
-        $this->generatedFiles[] = $controllerPath . ' (updated)';
+        $this->generatedFiles[] = $controllerPath.' (updated)';
     }
 
     /**
@@ -231,13 +241,13 @@ class DatatableGenerator
     protected function getStub(string $stubName): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        $stubFile = $stubName . '.stub';
+        $stubFile = $stubName.'.stub';
 
-        if ($customStubPath && File::exists($customStubPath . '/datatable/' . $stubFile)) {
-            return File::get($customStubPath . '/datatable/' . $stubFile);
+        if ($customStubPath && File::exists($customStubPath.'/datatable/'.$stubFile)) {
+            return File::get($customStubPath.'/datatable/'.$stubFile);
         }
 
-        return File::get(__DIR__ . '/Stubs/' . $stubFile);
+        return File::get(__DIR__.'/Stubs/'.$stubFile);
     }
 
     /**
@@ -245,7 +255,7 @@ class DatatableGenerator
      */
     protected function getViewStub(): string
     {
-        return $this->getStub($this->type . '.view');
+        return $this->getStub($this->type.'.view');
     }
 
     /**
@@ -253,7 +263,7 @@ class DatatableGenerator
      */
     protected function getJavaScriptStub(): string
     {
-        return $this->getStub($this->type . '.js');
+        return $this->getStub($this->type.'.js');
     }
 
     /**
@@ -269,7 +279,7 @@ class DatatableGenerator
      */
     protected function getDatatableMethodsStub(): string
     {
-        return $this->getStub($this->type . '.methods');
+        return $this->getStub($this->type.'.methods');
     }
 
     /**
@@ -280,7 +290,7 @@ class DatatableGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -298,7 +308,7 @@ class DatatableGenerator
         $modelVariable = $this->getModelVariable();
         $modelVariablePlural = Str::plural($modelVariable);
         $routeName = $this->getRouteName();
-        $datatableName = $modelClass . 'DataTable';
+        $datatableName = $modelClass.'DataTable';
 
         return [
             'namespace' => $controllerNamespace,
@@ -340,7 +350,7 @@ class DatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -361,7 +371,7 @@ class DatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -372,7 +382,7 @@ class DatatableGenerator
      */
     protected function getControllerName(): string
     {
-        return $this->getModelClass() . 'Controller';
+        return $this->getModelClass().'Controller';
     }
 
     /**
@@ -389,7 +399,8 @@ class DatatableGenerator
     protected function getRouteName(): string
     {
         $parts = explode('/', $this->modelName);
-        $names = array_map(fn($part) => Str::kebab($part), $parts);
+        $names = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $names);
     }
 
@@ -408,10 +419,10 @@ class DatatableGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getControllerName() . '.php';
+        return $path.'/'.$this->getControllerName().'.php';
     }
 
     /**
@@ -420,15 +431,15 @@ class DatatableGenerator
     protected function getViewPath(bool $dotNotation = false): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::kebab($part), $parts);
-        
+        $paths = array_map(fn ($part) => Str::kebab($part), $parts);
+
         if ($dotNotation) {
-            return implode('.', $paths) . '.index';
+            return implode('.', $paths).'.index';
         }
 
-        $viewPath = resource_path('views/' . implode('/', $paths));
-        
-        return $viewPath . '/index.blade.php';
+        $viewPath = resource_path('views/'.implode('/', $paths));
+
+        return $viewPath.'/index.blade.php';
     }
 
     /**
@@ -437,11 +448,11 @@ class DatatableGenerator
     protected function getJavaScriptPath(): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::kebab($part), $parts);
-        
-        $jsPath = resource_path('js/datatables/' . implode('/', $paths));
-        
-        return $jsPath . '.js';
+        $paths = array_map(fn ($part) => Str::kebab($part), $parts);
+
+        $jsPath = resource_path('js/datatables/'.implode('/', $paths));
+
+        return $jsPath.'.js';
     }
 
     /**
@@ -449,7 +460,7 @@ class DatatableGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

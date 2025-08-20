@@ -4,24 +4,19 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Migration;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
-use AutoGen\Common\Templates\TemplateEngine;
 use AutoGen\Common\Exceptions\GenerationException;
+use AutoGen\Common\Templates\TemplateEngine;
+use Illuminate\Support\Facades\File;
 
 class MigrationTemplateEngine
 {
     /**
      * The base template engine instance.
-     *
-     * @var TemplateEngine
      */
     protected TemplateEngine $templateEngine;
 
     /**
      * Database type to Laravel column type mappings.
-     *
-     * @var array
      */
     protected array $columnTypeMappings = [
         // MySQL/MariaDB
@@ -55,7 +50,7 @@ class MigrationTemplateEngine
         'point' => 'point',
         'linestring' => 'linestring',
         'polygon' => 'polygon',
-        
+
         // PostgreSQL
         'serial' => 'increments',
         'bigserial' => 'bigIncrements',
@@ -68,13 +63,13 @@ class MigrationTemplateEngine
         'macaddr' => 'macAddress',
         'cidr' => 'string',
         'array' => 'json',
-        
+
         // SQLite
         'integer' => 'integer',
         'real' => 'float',
         'numeric' => 'decimal',
         'blob' => 'binary',
-        
+
         // SQL Server
         'bit' => 'boolean',
         'tinyint' => 'tinyInteger',
@@ -185,7 +180,7 @@ class MigrationTemplateEngine
         }
 
         // Add foreign keys (only if not separating them)
-        if ($config['with_foreign_keys'] && !$this->shouldSeparateForeignKeys($tableStructure)) {
+        if ($config['with_foreign_keys'] && ! $this->shouldSeparateForeignKeys($tableStructure)) {
             foreach ($tableStructure['foreign_keys'] as $fk) {
                 $lines[] = $this->generateForeignKeyDefinition($fk);
             }
@@ -194,7 +189,7 @@ class MigrationTemplateEngine
         // Add table options
         $this->addTableOptions($lines, $tableStructure);
 
-        $lines[] = "});";
+        $lines[] = '});';
 
         return implode("\n            ", $lines);
     }
@@ -230,14 +225,14 @@ class MigrationTemplateEngine
             $definition .= ", ['{$values}']";
         }
 
-        $definition .= ")";
+        $definition .= ')';
 
         // Add modifiers
-        if (!empty($modifiers)) {
+        if (! empty($modifiers)) {
             $definition .= $modifiers;
         }
 
-        return $definition . ";";
+        return $definition.';';
     }
 
     /**
@@ -246,7 +241,7 @@ class MigrationTemplateEngine
     protected function mapColumnType(array $column): string
     {
         $type = strtolower($column['type']);
-        
+
         // Handle special cases
         if ($type === 'tinyint' && isset($column['length']) && $column['length'] == 1) {
             return 'boolean';
@@ -271,7 +266,7 @@ class MigrationTemplateEngine
         $modifiers = [];
 
         // Nullable
-        if ($column['nullable'] && !$this->isPrimaryKey($column['name'], $tableStructure)) {
+        if ($column['nullable'] && ! $this->isPrimaryKey($column['name'], $tableStructure)) {
             $modifiers[] = 'nullable()';
         }
 
@@ -287,17 +282,17 @@ class MigrationTemplateEngine
         }
 
         // Auto increment (handled in type mapping mostly)
-        if (($column['auto_increment'] ?? false) && !str_contains($this->mapColumnType($column), 'increment')) {
+        if (($column['auto_increment'] ?? false) && ! str_contains($this->mapColumnType($column), 'increment')) {
             $modifiers[] = 'autoIncrement()';
         }
 
         // Comment
-        if (!empty($column['comment'])) {
+        if (! empty($column['comment'])) {
             $comment = addslashes($column['comment']);
             $modifiers[] = "comment('{$comment}')";
         }
 
-        return empty($modifiers) ? '' : '->' . implode('->', $modifiers);
+        return empty($modifiers) ? '' : '->'.implode('->', $modifiers);
     }
 
     /**
@@ -306,8 +301,8 @@ class MigrationTemplateEngine
     protected function isPrimaryKey(string $columnName, array $tableStructure): bool
     {
         $primaryKey = $tableStructure['primary_key'];
-        
-        if (!$primaryKey) {
+
+        if (! $primaryKey) {
             return false;
         }
 
@@ -323,8 +318,8 @@ class MigrationTemplateEngine
             return "DB::raw('CURRENT_TIMESTAMP')";
         }
 
-        if (is_string($value) && !is_numeric($value)) {
-            return "'" . addslashes($value) . "'";
+        if (is_string($value) && ! is_numeric($value)) {
+            return "'".addslashes($value)."'";
         }
 
         if ($value === 'true' || $value === '1' && $type === 'boolean') {
@@ -344,7 +339,7 @@ class MigrationTemplateEngine
     protected function generateIndexDefinition(array $index): string
     {
         $columns = is_array($index['columns']) ? $index['columns'] : [$index['columns']];
-        $columnsList = "'" . implode("', '", $columns) . "'";
+        $columnsList = "'".implode("', '", $columns)."'";
 
         if ($index['unique']) {
             if (count($columns) === 1) {
@@ -369,7 +364,7 @@ class MigrationTemplateEngine
         $column = $foreignKey['column'];
         $foreignTable = $foreignKey['foreign_table'];
         $foreignColumn = $foreignKey['foreign_column'];
-        
+
         $definition = "\$table->foreign('{$column}')->references('{$foreignColumn}')->on('{$foreignTable}')";
 
         if ($foreignKey['on_delete'] !== 'RESTRICT') {
@@ -388,7 +383,7 @@ class MigrationTemplateEngine
             }
         }
 
-        return $definition . ";";
+        return $definition.';';
     }
 
     /**
@@ -397,22 +392,22 @@ class MigrationTemplateEngine
     protected function addTableOptions(array &$lines, array $tableStructure): void
     {
         // Engine (MySQL)
-        if (!empty($tableStructure['engine']) && $tableStructure['engine'] !== 'InnoDB') {
+        if (! empty($tableStructure['engine']) && $tableStructure['engine'] !== 'InnoDB') {
             $lines[] = "\$table->engine = '{$tableStructure['engine']}';";
         }
 
         // Charset (MySQL)
-        if (!empty($tableStructure['charset'])) {
+        if (! empty($tableStructure['charset'])) {
             $lines[] = "\$table->charset = '{$tableStructure['charset']}';";
         }
 
         // Collation (MySQL)
-        if (!empty($tableStructure['collation'])) {
+        if (! empty($tableStructure['collation'])) {
             $lines[] = "\$table->collation = '{$tableStructure['collation']}';";
         }
 
         // Comment
-        if (!empty($tableStructure['comment'])) {
+        if (! empty($tableStructure['comment'])) {
             $comment = addslashes($tableStructure['comment']);
             $lines[] = "\$table->comment('{$comment}');";
         }
@@ -427,10 +422,10 @@ class MigrationTemplateEngine
         $lines[] = "Schema::table('{$table}', function (Blueprint \$table) {";
 
         foreach ($foreignKeys as $fk) {
-            $lines[] = "    " . $this->generateForeignKeyDefinition($fk);
+            $lines[] = '    '.$this->generateForeignKeyDefinition($fk);
         }
 
-        $lines[] = "});";
+        $lines[] = '});';
 
         return implode("\n            ", $lines);
     }
@@ -447,7 +442,7 @@ class MigrationTemplateEngine
             $lines[] = "    \$table->dropForeign(['{$fk['column']}']);";
         }
 
-        $lines[] = "});";
+        $lines[] = '});';
 
         return implode("\n            ", $lines);
     }
@@ -465,7 +460,7 @@ class MigrationTemplateEngine
      */
     protected function generateRollbackDownContent(string $table): string
     {
-        return "// Cannot reliably recreate table structure in rollback";
+        return '// Cannot reliably recreate table structure in rollback';
     }
 
     /**
@@ -483,7 +478,7 @@ class MigrationTemplateEngine
      */
     protected function getStubContent(string $type): string
     {
-        $stubPath = __DIR__ . "/Stubs/{$type}.stub";
+        $stubPath = __DIR__."/Stubs/{$type}.stub";
 
         if (File::exists($stubPath)) {
             return File::get($stubPath);

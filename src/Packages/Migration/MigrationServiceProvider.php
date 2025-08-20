@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Migration;
 
-use Illuminate\Support\ServiceProvider;
-use AutoGen\Packages\Model\DatabaseIntrospector;
 use AutoGen\Common\Templates\TemplateEngine;
+use AutoGen\Packages\Model\DatabaseIntrospector;
+use Illuminate\Support\ServiceProvider;
 
 class MigrationServiceProvider extends ServiceProvider
 {
@@ -17,7 +17,7 @@ class MigrationServiceProvider extends ServiceProvider
     {
         // Merge configuration
         $this->mergeConfigFrom(
-            __DIR__ . '/config/migration.php',
+            __DIR__.'/config/migration.php',
             'autogen.migration'
         );
 
@@ -65,12 +65,12 @@ class MigrationServiceProvider extends ServiceProvider
 
         // Publish configuration
         $this->publishes([
-            __DIR__ . '/config/migration.php' => config_path('autogen/migration.php'),
+            __DIR__.'/config/migration.php' => config_path('autogen/migration.php'),
         ], 'autogen-migration-config');
 
         // Publish stubs
         $this->publishes([
-            __DIR__ . '/Stubs' => resource_path('stubs/autogen/migration'),
+            __DIR__.'/Stubs' => resource_path('stubs/autogen/migration'),
         ], 'autogen-migration-stubs');
     }
 

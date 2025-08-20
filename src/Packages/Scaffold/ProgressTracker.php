@@ -11,64 +11,46 @@ class ProgressTracker
 {
     /**
      * The execution plan being tracked.
-     *
-     * @var ExecutionPlan|null
      */
     protected ?ExecutionPlan $plan = null;
 
     /**
      * Current step being executed.
-     *
-     * @var ExecutionStep|null
      */
     protected ?ExecutionStep $currentStep = null;
 
     /**
      * Completed steps.
-     *
-     * @var Collection
      */
     protected Collection $completedSteps;
 
     /**
      * Failed steps.
-     *
-     * @var Collection
      */
     protected Collection $failedSteps;
 
     /**
      * Step execution times.
-     *
-     * @var array
      */
     protected array $stepTimes = [];
 
     /**
      * Overall start time.
-     *
-     * @var \Carbon\Carbon|null
      */
     protected ?\Carbon\Carbon $startTime = null;
 
     /**
      * Overall end time.
-     *
-     * @var \Carbon\Carbon|null
      */
     protected ?\Carbon\Carbon $endTime = null;
 
     /**
      * Progress statistics.
-     *
-     * @var array
      */
     protected array $statistics = [];
 
     /**
      * Progress callbacks.
-     *
-     * @var array
      */
     protected array $callbacks = [];
 
@@ -147,10 +129,10 @@ class ProgressTracker
     public function completeStep(ExecutionStep $step, StepResult $result): void
     {
         $this->completedSteps->push($step);
-        
+
         if (isset($this->stepTimes[$step->getPackage()])) {
             $this->stepTimes[$step->getPackage()]['end'] = now();
-            $this->stepTimes[$step->getPackage()]['duration'] = 
+            $this->stepTimes[$step->getPackage()]['duration'] =
                 $this->stepTimes[$step->getPackage()]['end']->diffInSeconds(
                     $this->stepTimes[$step->getPackage()]['start']
                 );
@@ -189,7 +171,7 @@ class ProgressTracker
 
         if (isset($this->stepTimes[$step->getPackage()])) {
             $this->stepTimes[$step->getPackage()]['end'] = now();
-            $this->stepTimes[$step->getPackage()]['duration'] = 
+            $this->stepTimes[$step->getPackage()]['duration'] =
                 $this->stepTimes[$step->getPackage()]['end']->diffInSeconds(
                     $this->stepTimes[$step->getPackage()]['start']
                 );
@@ -218,8 +200,8 @@ class ProgressTracker
     public function complete(): void
     {
         $this->endTime = now();
-        
-        $totalDuration = $this->startTime ? 
+
+        $totalDuration = $this->startTime ?
             $this->endTime->diffInSeconds($this->startTime) : 0;
 
         Log::info('Scaffold generation completed', [
@@ -243,8 +225,8 @@ class ProgressTracker
     public function fail(string $error): void
     {
         $this->endTime = now();
-        
-        $totalDuration = $this->startTime ? 
+
+        $totalDuration = $this->startTime ?
             $this->endTime->diffInSeconds($this->startTime) : 0;
 
         Log::error('Scaffold generation failed', [
@@ -268,7 +250,7 @@ class ProgressTracker
      */
     public function getProgress(): array
     {
-        if (!$this->plan) {
+        if (! $this->plan) {
             return [
                 'percentage' => 0,
                 'completed_steps' => 0,
@@ -302,13 +284,13 @@ class ProgressTracker
     public function getStatistics(): array
     {
         $stats = $this->statistics;
-        
+
         $stats['execution_time'] = $this->getTotalExecutionTime();
         $stats['average_step_time'] = $this->getAverageStepTime();
         $stats['slowest_step'] = $this->getSlowestStep();
         $stats['fastest_step'] = $this->getFastestStep();
         $stats['steps_breakdown'] = $this->getStepsBreakdown();
-        
+
         return $stats;
     }
 
@@ -318,7 +300,7 @@ class ProgressTracker
     public function getStepsBreakdown(): array
     {
         $breakdown = [];
-        
+
         foreach ($this->stepTimes as $package => $times) {
             $breakdown[$package] = [
                 'duration' => $times['duration'],
@@ -327,7 +309,7 @@ class ProgressTracker
                 'status' => $this->getStepStatus($package),
             ];
         }
-        
+
         return $breakdown;
     }
 
@@ -339,15 +321,15 @@ class ProgressTracker
         if ($this->completedSteps->firstWhere('package', $package)) {
             return 'completed';
         }
-        
+
         if ($this->failedSteps->firstWhere('step.package', $package)) {
             return 'failed';
         }
-        
+
         if ($this->currentStep && $this->currentStep->getPackage() === $package) {
             return 'running';
         }
-        
+
         return 'pending';
     }
 
@@ -357,14 +339,14 @@ class ProgressTracker
     protected function estimateFileCount(array $config): int
     {
         $count = 0;
-        
+
         // Model files
-        if (!$config['model']['skip']) {
+        if (! $config['model']['skip']) {
             $count += 1; // Model class
         }
-        
+
         // Controller files
-        if (!$config['controller']['skip']) {
+        if (! $config['controller']['skip']) {
             $count += 1; // Controller class
             if ($config['controller']['with_validation']) {
                 $count += 2; // Store and Update requests
@@ -373,28 +355,28 @@ class ProgressTracker
                 $count += 1; // Policy class
             }
         }
-        
+
         // View files
-        if (!$config['views']['skip'] && $config['controller']['type'] === 'resource') {
+        if (! $config['views']['skip'] && $config['controller']['type'] === 'resource') {
             $viewCount = empty($config['views']['only']) ? 4 : count($config['views']['only']);
             $count += $viewCount;
         }
-        
+
         // Factory files
         if ($config['factory']['generate']) {
             $count += 1;
         }
-        
+
         // DataTable files
         if ($config['datatable']['generate']) {
             $count += 1;
         }
-        
+
         // Migration files
         if ($config['migration']['generate']) {
             $count += 1;
         }
-        
+
         return $count;
     }
 
@@ -412,33 +394,33 @@ class ProgressTracker
             'datatable' => 6,
             'migration' => 4,
         ];
-        
+
         $totalEstimate = 0;
-        
-        if (!$config['model']['skip']) {
+
+        if (! $config['model']['skip']) {
             $totalEstimate += $estimates['model'];
         }
-        
-        if (!$config['controller']['skip']) {
+
+        if (! $config['controller']['skip']) {
             $totalEstimate += $estimates['controller'];
         }
-        
-        if (!$config['views']['skip']) {
+
+        if (! $config['views']['skip']) {
             $totalEstimate += $estimates['views'];
         }
-        
+
         if ($config['factory']['generate']) {
             $totalEstimate += $estimates['factory'];
         }
-        
+
         if ($config['datatable']['generate']) {
             $totalEstimate += $estimates['datatable'];
         }
-        
+
         if ($config['migration']['generate']) {
             $totalEstimate += $estimates['migration'];
         }
-        
+
         return $totalEstimate;
     }
 
@@ -447,13 +429,13 @@ class ProgressTracker
      */
     protected function getEstimatedTimeRemaining(): ?int
     {
-        if (!$this->plan || !$this->startTime) {
+        if (! $this->plan || ! $this->startTime) {
             return null;
         }
 
         $completedSteps = $this->completedSteps->count();
         $totalSteps = $this->plan->getSteps()->count();
-        
+
         if ($completedSteps === 0) {
             return $this->statistics['estimated_duration'] ?? null;
         }
@@ -461,7 +443,7 @@ class ProgressTracker
         $elapsedTime = now()->diffInSeconds($this->startTime);
         $averageTimePerStep = $elapsedTime / $completedSteps;
         $remainingSteps = $totalSteps - $completedSteps;
-        
+
         return (int) ($remainingSteps * $averageTimePerStep);
     }
 
@@ -470,11 +452,12 @@ class ProgressTracker
      */
     protected function getTotalExecutionTime(): ?int
     {
-        if (!$this->startTime) {
+        if (! $this->startTime) {
             return null;
         }
-        
+
         $endTime = $this->endTime ?? now();
+
         return $endTime->diffInSeconds($this->startTime);
     }
 
@@ -484,11 +467,11 @@ class ProgressTracker
     protected function getAverageStepTime(): ?float
     {
         $durations = array_filter(array_column($this->stepTimes, 'duration'));
-        
+
         if (empty($durations)) {
             return null;
         }
-        
+
         return array_sum($durations) / count($durations);
     }
 
@@ -499,7 +482,7 @@ class ProgressTracker
     {
         $slowestDuration = 0;
         $slowestStep = null;
-        
+
         foreach ($this->stepTimes as $package => $times) {
             if ($times['duration'] && $times['duration'] > $slowestDuration) {
                 $slowestDuration = $times['duration'];
@@ -509,7 +492,7 @@ class ProgressTracker
                 ];
             }
         }
-        
+
         return $slowestStep;
     }
 
@@ -520,7 +503,7 @@ class ProgressTracker
     {
         $fastestDuration = PHP_INT_MAX;
         $fastestStep = null;
-        
+
         foreach ($this->stepTimes as $package => $times) {
             if ($times['duration'] && $times['duration'] < $fastestDuration) {
                 $fastestDuration = $times['duration'];
@@ -530,7 +513,7 @@ class ProgressTracker
                 ];
             }
         }
-        
+
         return $fastestStep;
     }
 
@@ -539,10 +522,10 @@ class ProgressTracker
      */
     public function onProgress(string $event, callable $callback): void
     {
-        if (!isset($this->callbacks[$event])) {
+        if (! isset($this->callbacks[$event])) {
             $this->callbacks[$event] = [];
         }
-        
+
         $this->callbacks[$event][] = $callback;
     }
 

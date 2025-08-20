@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace AutoGen\Common\Templates;
 
 use AutoGen\Common\Contracts\TemplateEngineInterface;
-use AutoGen\Common\Traits\HasConfiguration;
-use AutoGen\Common\Traits\HandlesFiles;
-use AutoGen\Common\Traits\ValidatesInput;
 use AutoGen\Common\Exceptions\FileNotFoundException;
+use AutoGen\Common\Traits\HandlesFiles;
+use AutoGen\Common\Traits\HasConfiguration;
+use AutoGen\Common\Traits\ValidatesInput;
 
 class TemplateEngine implements TemplateEngineInterface
 {
-    use HasConfiguration;
     use HandlesFiles;
+    use HasConfiguration;
     use ValidatesInput;
 
     /**
@@ -43,7 +43,7 @@ class TemplateEngine implements TemplateEngineInterface
         $this->validateNotEmpty($template, 'template');
 
         $allVariables = array_merge($this->globalVariables, $variables);
-        
+
         return $this->processTemplate($template, $allVariables);
     }
 
@@ -55,13 +55,13 @@ class TemplateEngine implements TemplateEngineInterface
         $this->validateNotEmpty($templatePath, 'templatePath');
 
         $fullPath = $this->findTemplatePath($templatePath);
-        
-        if (!$fullPath) {
+
+        if (! $fullPath) {
             throw new FileNotFoundException("Template not found: {$templatePath}");
         }
 
         $template = $this->readFile($fullPath);
-        
+
         return $this->render($template, $variables);
     }
 
@@ -105,10 +105,10 @@ class TemplateEngine implements TemplateEngineInterface
         foreach ($paths as $path) {
             if (is_dir($path)) {
                 $files = $this->getFilesInDirectory($path);
-                
+
                 foreach ($files as $file) {
                     if (str_ends_with($file, $extension)) {
-                        $relativePath = str_replace($path . '/', '', $file);
+                        $relativePath = str_replace($path.'/', '', $file);
                         $templateName = str_replace($extension, '', $relativePath);
                         $templates[] = $templateName;
                     }
@@ -125,8 +125,8 @@ class TemplateEngine implements TemplateEngineInterface
     public function cacheTemplate(string $template, string $compiled): void
     {
         $cacheEnabled = $this->getConfigValue('cache_enabled', true);
-        
-        if (!$cacheEnabled) {
+
+        if (! $cacheEnabled) {
             return;
         }
 
@@ -136,8 +136,8 @@ class TemplateEngine implements TemplateEngineInterface
         // Also save to disk cache if path is configured
         $cachePath = $this->getConfigValue('cache');
         if ($cachePath) {
-            $cacheFile = $cachePath . '/' . $cacheKey . '.php';
-            $this->writeFile($cacheFile, "<?php\nreturn " . var_export($compiled, true) . ';');
+            $cacheFile = $cachePath.'/'.$cacheKey.'.php';
+            $this->writeFile($cacheFile, "<?php\nreturn ".var_export($compiled, true).';');
         }
     }
 
@@ -150,7 +150,7 @@ class TemplateEngine implements TemplateEngineInterface
 
         $cachePath = $this->getConfigValue('cache');
         if ($cachePath && is_dir($cachePath)) {
-            $cacheFiles = glob($cachePath . '/*.php');
+            $cacheFiles = glob($cachePath.'/*.php');
             foreach ($cacheFiles as $file) {
                 unlink($file);
             }
@@ -178,7 +178,7 @@ class TemplateEngine implements TemplateEngineInterface
     protected function processTemplate(string $template, array $variables): string
     {
         $cacheKey = $this->getCacheKey($template);
-        
+
         // Check cache first
         if (isset($this->cache[$cacheKey])) {
             return $this->replaceVariables($this->cache[$cacheKey], $variables);
@@ -188,15 +188,16 @@ class TemplateEngine implements TemplateEngineInterface
         $compiled = $this->loadFromDiskCache($cacheKey);
         if ($compiled !== null) {
             $this->cache[$cacheKey] = $compiled;
+
             return $this->replaceVariables($compiled, $variables);
         }
 
         // Process template
         $processed = $this->compileTemplate($template);
-        
+
         // Cache the compiled template
         $this->cacheTemplate($template, $processed);
-        
+
         return $this->replaceVariables($processed, $variables);
     }
 
@@ -206,7 +207,7 @@ class TemplateEngine implements TemplateEngineInterface
     protected function compileTemplate(string $template): string
     {
         $engine = $this->getConfigValue('engine', 'simple');
-        
+
         return match ($engine) {
             'blade' => $this->compileBlade($template),
             'twig' => $this->compileTwig($template),
@@ -220,7 +221,7 @@ class TemplateEngine implements TemplateEngineInterface
     protected function replaceVariables(string $template, array $variables): string
     {
         $style = $this->getConfigValue('variables_style', 'double_curly');
-        
+
         return match ($style) {
             'at_sign' => $this->replaceAtSignVariables($template, $variables),
             default => $this->replaceDoubleCurlyVariables($template, $variables),
@@ -234,6 +235,7 @@ class TemplateEngine implements TemplateEngineInterface
     {
         return preg_replace_callback('/\{\{\s*(\w+)\s*\}\}/', function ($matches) use ($variables) {
             $varName = $matches[1];
+
             return $variables[$varName] ?? $matches[0];
         }, $template);
     }
@@ -245,6 +247,7 @@ class TemplateEngine implements TemplateEngineInterface
     {
         return preg_replace_callback('/@(\w+)/', function ($matches) use ($variables) {
             $varName = $matches[1];
+
             return $variables[$varName] ?? $matches[0];
         }, $template);
     }
@@ -259,7 +262,7 @@ class TemplateEngine implements TemplateEngineInterface
         $template = preg_replace('/@endif/', '<?php endif; ?>', $template);
         $template = preg_replace('/@foreach\s*\((.*?)\)/', '<?php foreach($1): ?>', $template);
         $template = preg_replace('/@endforeach/', '<?php endforeach; ?>', $template);
-        
+
         return $template;
     }
 
@@ -271,7 +274,7 @@ class TemplateEngine implements TemplateEngineInterface
         // Very basic Twig-like syntax support
         $template = preg_replace('/\{\%\s*if\s+(.*?)\s*\%\}/', '<?php if($1): ?>', $template);
         $template = preg_replace('/\{\%\s*endif\s*\%\}/', '<?php endif; ?>', $template);
-        
+
         return $template;
     }
 
@@ -282,10 +285,10 @@ class TemplateEngine implements TemplateEngineInterface
     {
         $paths = $this->getConfigValue('paths', []);
         $extension = $this->getConfigValue('file_extension', '.stub');
-        
+
         foreach ($paths as $basePath) {
-            $fullPath = $basePath . '/' . $template . $extension;
-            
+            $fullPath = $basePath.'/'.$template.$extension;
+
             if (file_exists($fullPath)) {
                 return $fullPath;
             }
@@ -308,13 +311,13 @@ class TemplateEngine implements TemplateEngineInterface
     protected function loadFromDiskCache(string $cacheKey): ?string
     {
         $cachePath = $this->getConfigValue('cache');
-        
-        if (!$cachePath) {
+
+        if (! $cachePath) {
             return null;
         }
 
-        $cacheFile = $cachePath . '/' . $cacheKey . '.php';
-        
+        $cacheFile = $cachePath.'/'.$cacheKey.'.php';
+
         if (file_exists($cacheFile)) {
             return include $cacheFile;
         }
@@ -328,7 +331,7 @@ class TemplateEngine implements TemplateEngineInterface
     protected function ensureCacheDirectoryExists(): void
     {
         $cachePath = $this->getConfigValue('cache');
-        
+
         if ($cachePath) {
             $this->ensureDirectoryExists($cachePath);
         }

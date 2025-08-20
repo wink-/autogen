@@ -86,11 +86,11 @@ class User extends Model
     
     protected $table = 'users';
     
-    protected readonly string $primaryKey = 'id';
+    protected $primaryKey = 'id';
     
-    public readonly bool $incrementing = true;
+    public $incrementing = true;
     
-    protected readonly string $keyType = 'int';
+    protected $keyType = 'int';
     
     protected $fillable = [
         'name',

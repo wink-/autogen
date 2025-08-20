@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class ApiDatatableGenerator
 {
     protected string $modelName;
+
     protected array $options;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, array $options = [])
@@ -27,7 +29,7 @@ class ApiDatatableGenerator
         $this->generateApiController();
         $this->generateApiResource();
         $this->generateApiDocumentation();
-        
+
         return $this->generatedFiles;
     }
 
@@ -42,7 +44,7 @@ class ApiDatatableGenerator
         $stub = $this->getControllerStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("API controller already exists at: {$path}");
         }
 
@@ -61,7 +63,7 @@ class ApiDatatableGenerator
         $stub = $this->getResourceStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("API resource already exists at: {$path}");
         }
 
@@ -80,7 +82,7 @@ class ApiDatatableGenerator
         $stub = $this->getDocumentationStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("API documentation already exists at: {$path}");
         }
 
@@ -94,12 +96,12 @@ class ApiDatatableGenerator
     protected function getControllerStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/api.controller.stub')) {
-            return File::get($customStubPath . '/datatable/api.controller.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/api.controller.stub')) {
+            return File::get($customStubPath.'/datatable/api.controller.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/api.controller.stub');
+        return File::get(__DIR__.'/Stubs/api.controller.stub');
     }
 
     /**
@@ -108,12 +110,12 @@ class ApiDatatableGenerator
     protected function getResourceStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/api.resource.stub')) {
-            return File::get($customStubPath . '/datatable/api.resource.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/api.resource.stub')) {
+            return File::get($customStubPath.'/datatable/api.resource.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/api.resource.stub');
+        return File::get(__DIR__.'/Stubs/api.resource.stub');
     }
 
     /**
@@ -122,12 +124,12 @@ class ApiDatatableGenerator
     protected function getDocumentationStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/api.documentation.stub')) {
-            return File::get($customStubPath . '/datatable/api.documentation.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/api.documentation.stub')) {
+            return File::get($customStubPath.'/datatable/api.documentation.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/api.documentation.stub');
+        return File::get(__DIR__.'/Stubs/api.documentation.stub');
     }
 
     /**
@@ -138,7 +140,7 @@ class ApiDatatableGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -207,11 +209,11 @@ class ApiDatatableGenerator
             'direction' => 'nullable|string|in:asc,desc',
             'per_page' => 'nullable|integer|min:1|max:100',
             'page' => 'nullable|integer|min:1',
-            " . ($this->options['withSearch'] ? "
+            ".($this->options['withSearch'] ? "
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from'," : "") . "
+            'date_to' => 'nullable|date|after_or_equal:date_from'," : '')."
         ]);
 
         if (\$validator->fails()) {
@@ -395,7 +397,7 @@ class ApiDatatableGenerator
             }";
         }
 
-        return $optimizations ? '            ' . implode("\n            ", $optimizations) : '';
+        return $optimizations ? '            '.implode("\n            ", $optimizations) : '';
     }
 
     /**
@@ -403,7 +405,7 @@ class ApiDatatableGenerator
      */
     protected function getCacheQuery(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -422,7 +424,7 @@ class ApiDatatableGenerator
      */
     protected function getCacheStatsQuery(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -485,7 +487,7 @@ class ApiDatatableGenerator
      */
     protected function getExportMethodsImplementation(): string
     {
-        if (!($this->options['withExports'] ?? false)) {
+        if (! ($this->options['withExports'] ?? false)) {
             return '';
         }
 
@@ -504,11 +506,11 @@ class ApiDatatableGenerator
         \$validator = Validator::make(array_merge(\$request->all(), ['format' => \$format]), [
             'format' => 'required|string|in:excel,csv,pdf',
             'search' => 'nullable|string|max:255',
-            " . ($this->options['withSearch'] ? "
+            ".($this->options['withSearch'] ? "
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from'," : "") . "
+            'date_to' => 'nullable|date|after_or_equal:date_from'," : '')."
         ]);
 
         if (\$validator->fails()) {
@@ -525,7 +527,7 @@ class ApiDatatableGenerator
             
             \$data = \$query->get();
             
-            " . ($this->options['backgroundJobs'] ? "
+            ".($this->options['backgroundJobs'] ? "
             // Process export in background job for large datasets
             if (\$data->count() > 1000) {
                 \$job = dispatch(new Export{$modelClass}Job(\$data, \$format, auth()->user()));
@@ -535,7 +537,7 @@ class ApiDatatableGenerator
                     'job_id' => \$job->getJobId(),
                     'estimated_time' => ceil(\$data->count() / 1000) * 60 // seconds
                 ]);
-            }" : "") . "
+            }" : '')."
 
             \$export = new {$modelClass}Export(\$data);
             
@@ -561,7 +563,7 @@ class ApiDatatableGenerator
      */
     protected function getBulkMethodsImplementation(): string
     {
-        if (!($this->options['withBulk'] ?? false)) {
+        if (! ($this->options['withBulk'] ?? false)) {
             return '';
         }
 
@@ -695,13 +697,13 @@ Get paginated list of {$modelVariablePlural} with filtering and sorting.
 - `sort` (string, optional): Sort field (id|name|email|created_at|updated_at)
 - `direction` (string, optional): Sort direction (asc|desc)
 - `per_page` (integer, optional): Items per page (1-100, default: 15)
-- `page` (integer, optional): Page number" .
+- `page` (integer, optional): Page number".
 
-($this->options['withSearch'] ? "
+($this->options['withSearch'] ? '
 - `name` (string, optional): Filter by name
 - `email` (string, optional): Filter by email
 - `date_from` (date, optional): Filter by creation date from
-- `date_to` (date, optional): Filter by creation date to" : "") . "
+- `date_to` (date, optional): Filter by creation date to' : '')."
 
 **Response:**
 ```json
@@ -770,7 +772,7 @@ Get aggregated statistics.
     \"created_this_month\": 100
   }
 }
-```" .
+```".
 
 ($this->options['withExports'] ? "
 
@@ -791,7 +793,7 @@ Export data in specified format (excel|csv|pdf).
   \"job_id\": \"12345\",
   \"estimated_time\": 180
 }
-```" : "") .
+```" : '').
 
 ($this->options['withBulk'] ? "
 
@@ -812,7 +814,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
   \"message\": \"5 items deleted successfully\",
   \"affected_rows\": 5
 }
-```" : "") . "
+```" : '')."
 
 ## Error Responses
 
@@ -843,13 +845,13 @@ Perform bulk actions on multiple {$modelVariablePlural}.
 ## Performance Features
 
 - **Server-side processing**: All filtering and sorting performed on the server
-- **Query optimization**: Efficient database queries with proper indexing" .
-($this->options['cache'] ? "
-- **Redis caching**: Query results cached for improved performance" : "") .
-($this->options['cursorPagination'] ? "
-- **Cursor pagination**: Available for large datasets with better performance" : "") .
-($this->options['virtualScroll'] ? "
-- **Virtual scrolling**: Frontend optimization for large result sets" : "") . "
+- **Query optimization**: Efficient database queries with proper indexing".
+($this->options['cache'] ? '
+- **Redis caching**: Query results cached for improved performance' : '').
+($this->options['cursorPagination'] ? '
+- **Cursor pagination**: Available for large datasets with better performance' : '').
+($this->options['virtualScroll'] ? '
+- **Virtual scrolling**: Frontend optimization for large result sets' : '').'
 - **Rate limiting**: Prevents API abuse and ensures fair usage
 
 ## Best Practices
@@ -858,7 +860,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
 2. Implement client-side caching for repeated requests
 3. Use cursor pagination for large datasets when sorting by ID
 4. Combine multiple filters to reduce result set size
-5. Monitor rate limits and implement proper error handling";
+5. Monitor rate limits and implement proper error handling';
     }
 
     /**
@@ -896,7 +898,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -913,7 +915,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -930,7 +932,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -941,7 +943,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
      */
     protected function getControllerName(): string
     {
-        return $this->getModelClass() . 'Controller';
+        return $this->getModelClass().'Controller';
     }
 
     /**
@@ -949,7 +951,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
      */
     protected function getResourceName(): string
     {
-        return $this->getModelClass() . 'Resource';
+        return $this->getModelClass().'Resource';
     }
 
     /**
@@ -966,7 +968,8 @@ Perform bulk actions on multiple {$modelVariablePlural}.
     protected function getRouteName(): string
     {
         $parts = explode('/', $this->modelName);
-        $names = array_map(fn($part) => Str::kebab($part), $parts);
+        $names = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $names);
     }
 
@@ -981,10 +984,10 @@ Perform bulk actions on multiple {$modelVariablePlural}.
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getControllerName() . '.php';
+        return $path.'/'.$this->getControllerName().'.php';
     }
 
     /**
@@ -998,10 +1001,10 @@ Perform bulk actions on multiple {$modelVariablePlural}.
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getResourceName() . '.php';
+        return $path.'/'.$this->getResourceName().'.php';
     }
 
     /**
@@ -1010,11 +1013,11 @@ Perform bulk actions on multiple {$modelVariablePlural}.
     protected function getApiDocumentationPath(): string
     {
         $parts = explode('/', $this->modelName);
-        $paths = array_map(fn($part) => Str::kebab($part), $parts);
-        
-        $docPath = base_path('docs/api/' . implode('/', $paths));
-        
-        return $docPath . '.md';
+        $paths = array_map(fn ($part) => Str::kebab($part), $parts);
+
+        $docPath = base_path('docs/api/'.implode('/', $paths));
+
+        return $docPath.'.md';
     }
 
     /**
@@ -1022,7 +1025,7 @@ Perform bulk actions on multiple {$modelVariablePlural}.
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

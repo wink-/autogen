@@ -6,8 +6,6 @@ namespace AutoGen\Packages\Scaffold;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 
 class ScaffoldCommand extends Command
 {
@@ -57,22 +55,16 @@ class ScaffoldCommand extends Command
 
     /**
      * The workflow orchestrator instance.
-     *
-     * @var WorkflowOrchestrator
      */
     protected WorkflowOrchestrator $orchestrator;
 
     /**
      * The configuration validator instance.
-     *
-     * @var ConfigurationValidator
      */
     protected ConfigurationValidator $validator;
 
     /**
      * The progress tracker instance.
-     *
-     * @var ProgressTracker
      */
     protected ProgressTracker $tracker;
 
@@ -85,7 +77,7 @@ class ScaffoldCommand extends Command
         ProgressTracker $tracker
     ) {
         parent::__construct();
-        
+
         $this->orchestrator = $orchestrator;
         $this->validator = $validator;
         $this->tracker = $tracker;
@@ -103,9 +95,10 @@ class ScaffoldCommand extends Command
 
         $table = $this->argument('table');
         $connection = $this->option('connection');
-        
-        if (!$connection) {
+
+        if (! $connection) {
             $this->error('The --connection option is required.');
+
             return self::FAILURE;
         }
 
@@ -116,12 +109,13 @@ class ScaffoldCommand extends Command
         try {
             // Validate configuration
             $config = $this->buildConfiguration();
-            
-            if (!$this->validator->validate($config)) {
+
+            if (! $this->validator->validate($config)) {
                 $this->error('Configuration validation failed:');
                 foreach ($this->validator->getErrors() as $error) {
                     $this->error("  - {$error}");
                 }
+
                 return self::FAILURE;
             }
 
@@ -143,19 +137,21 @@ class ScaffoldCommand extends Command
 
             if ($result->isSuccess()) {
                 $this->displaySuccessMessage($result);
+
                 return self::SUCCESS;
             } else {
                 $this->displayErrorMessage($result);
+
                 return self::FAILURE;
             }
 
         } catch (\Exception $e) {
-            $this->error('Scaffold generation failed: ' . $e->getMessage());
-            
+            $this->error('Scaffold generation failed: '.$e->getMessage());
+
             if ($this->option('verbose')) {
                 $this->error($e->getTraceAsString());
             }
-            
+
             return self::FAILURE;
         }
     }
@@ -171,7 +167,7 @@ class ScaffoldCommand extends Command
             'interactive' => $this->option('interactive') ?? false,
             'dry_run' => $this->option('dry-run') ?? false,
             'force' => $this->option('force') ?? false,
-            
+
             // Model configuration
             'model' => [
                 'skip' => $this->option('skip-model') ?? false,
@@ -181,7 +177,7 @@ class ScaffoldCommand extends Command
                 'with_scopes' => $this->option('with-scopes') ?? false,
                 'with_traits' => $this->option('with-traits') ?? true,
             ],
-            
+
             // Controller configuration
             'controller' => [
                 'skip' => $this->option('skip-controller') ?? false,
@@ -190,31 +186,31 @@ class ScaffoldCommand extends Command
                 'with_policy' => $this->option('with-policy') ?? false,
                 'paginate' => $this->option('paginate') ?: 15,
             ],
-            
+
             // Views configuration
             'views' => [
                 'skip' => $this->option('skip-views') ?? false,
                 'framework' => $this->option('view-framework') ?? 'tailwind',
                 'layout' => $this->option('view-layout') ?? 'layouts.app',
-                'only' => $this->option('view-only') ? 
+                'only' => $this->option('view-only') ?
                     array_map('trim', explode(',', $this->option('view-only'))) : [],
                 'with_datatable' => $this->option('with-datatable') ?? false,
                 'with_search' => $this->option('with-search') ?? false,
                 'with_modals' => $this->option('with-modals') ?? false,
             ],
-            
+
             // Migration configuration
             'migration' => [
                 'skip' => $this->option('skip-migration') ?? true,
                 'generate' => $this->option('with-migration') ?? false,
             ],
-            
+
             // Factory configuration
             'factory' => [
                 'skip' => $this->option('skip-factory') ?? true,
                 'generate' => $this->option('with-factory') ?? false,
             ],
-            
+
             // DataTable configuration
             'datatable' => [
                 'skip' => $this->option('skip-datatable') ?? true,
@@ -248,75 +244,76 @@ class ScaffoldCommand extends Command
         $this->newLine();
 
         // Model options
-        if (!$config['model']['skip']) {
+        if (! $config['model']['skip']) {
             $config['model']['with_relationships'] = $this->confirm(
-                'Include relationship analysis?', 
+                'Include relationship analysis?',
                 $config['model']['with_relationships']
             );
-            
+
             $config['model']['with_scopes'] = $this->confirm(
-                'Generate common query scopes?', 
+                'Generate common query scopes?',
                 $config['model']['with_scopes']
             );
         }
 
         // Controller options
-        if (!$config['controller']['skip']) {
+        if (! $config['controller']['skip']) {
             $controllerType = $this->choice(
                 'Controller type',
                 ['resource', 'api'],
                 $config['controller']['type'] === 'api' ? 1 : 0
             );
             $config['controller']['type'] = $controllerType;
-            
+
             $config['controller']['with_validation'] = $this->confirm(
-                'Generate form request validation classes?', 
+                'Generate form request validation classes?',
                 $config['controller']['with_validation']
             );
-            
+
             $config['controller']['with_policy'] = $this->confirm(
-                'Generate policy class?', 
+                'Generate policy class?',
                 $config['controller']['with_policy']
             );
         }
 
         // Views options (only for resource controllers)
-        if (!$config['views']['skip'] && $config['controller']['type'] === 'resource') {
+        if (! $config['views']['skip'] && $config['controller']['type'] === 'resource') {
             $framework = $this->choice(
                 'CSS framework',
                 ['tailwind', 'bootstrap', 'css'],
                 array_search($config['views']['framework'], ['tailwind', 'bootstrap', 'css'])
             );
             $config['views']['framework'] = $framework;
-            
+
             $config['views']['with_datatable'] = $this->confirm(
-                'Include DataTable integration?', 
+                'Include DataTable integration?',
                 $config['views']['with_datatable']
             );
-            
+
             $config['views']['with_search'] = $this->confirm(
-                'Include search/filter functionality?', 
+                'Include search/filter functionality?',
                 $config['views']['with_search']
             );
-            
+
             $config['views']['with_modals'] = $this->confirm(
-                'Use modal dialogs for confirmations?', 
+                'Use modal dialogs for confirmations?',
                 $config['views']['with_modals']
             );
         }
 
         // Additional components
         $config['factory']['generate'] = $this->confirm(
-            'Generate factory for testing?', 
+            'Generate factory for testing?',
             $config['factory']['generate']
         );
-        
+
         $config['migration']['generate'] = $this->confirm(
-            'Generate migration file?', 
+            'Generate migration file?',
             $config['migration']['generate']
         );
 
         $this->newLine();
+
         return $config;
     }
 
@@ -330,7 +327,7 @@ class ScaffoldCommand extends Command
 
         try {
             $plan = $this->orchestrator->createExecutionPlan($config);
-            
+
             $this->info('Execution Plan:');
             $this->table(
                 ['Step', 'Package', 'Command', 'Dependencies'],
@@ -339,24 +336,25 @@ class ScaffoldCommand extends Command
                         $step->getOrder(),
                         $step->getPackage(),
                         $step->getCommand(),
-                        implode(', ', $step->getDependencies())
+                        implode(', ', $step->getDependencies()),
                     ];
                 })->toArray()
             );
 
             $this->newLine();
             $this->info('Files that would be generated:');
-            
+
             foreach ($plan->getExpectedFiles() as $file) {
                 $this->line("  - {$file}");
             }
 
             $this->newLine();
             $this->info('Run without --dry-run to execute the plan.');
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to create execution plan: ' . $e->getMessage());
+            $this->error('Failed to create execution plan: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -367,19 +365,22 @@ class ScaffoldCommand extends Command
     protected function handleRollback(): int
     {
         $this->info('Rolling back last scaffold operation...');
-        
+
         try {
             $result = $this->orchestrator->rollback($this);
-            
+
             if ($result->isSuccess()) {
                 $this->info('Rollback completed successfully.');
+
                 return self::SUCCESS;
             } else {
-                $this->error('Rollback failed: ' . $result->getMessage());
+                $this->error('Rollback failed: '.$result->getMessage());
+
                 return self::FAILURE;
             }
         } catch (\Exception $e) {
-            $this->error('Rollback failed: ' . $e->getMessage());
+            $this->error('Rollback failed: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -394,13 +395,13 @@ class ScaffoldCommand extends Command
         $this->newLine();
 
         $summary = $result->getSummary();
-        
+
         $this->info('Generated files:');
         foreach ($summary['generated_files'] as $file) {
             $this->line("  ✓ {$file}");
         }
 
-        if (!empty($summary['skipped_files'])) {
+        if (! empty($summary['skipped_files'])) {
             $this->newLine();
             $this->warn('Skipped files (already exist):');
             foreach ($summary['skipped_files'] as $file) {
@@ -422,7 +423,7 @@ class ScaffoldCommand extends Command
         $this->error('❌ Scaffold generation failed!');
         $this->newLine();
 
-        $this->error('Error: ' . $result->getMessage());
+        $this->error('Error: '.$result->getMessage());
 
         if ($result->hasPartialSuccess()) {
             $this->newLine();
@@ -430,7 +431,7 @@ class ScaffoldCommand extends Command
             foreach ($result->getPartialFiles() as $file) {
                 $this->line("  ⚠ {$file}");
             }
-            
+
             $this->newLine();
             $this->info('You can run with --rollback to clean up partial generation.');
         }
@@ -446,7 +447,7 @@ class ScaffoldCommand extends Command
         $routeName = Str::plural(Str::kebab($table));
 
         $this->line('1. Add routes to your routes file:');
-        
+
         if ($config['controller']['type'] === 'api') {
             $this->line("   Route::apiResource('{$routeName}', \\App\\Http\\Controllers\\Api\\{$modelName}Controller::class);");
         } else {
@@ -458,7 +459,7 @@ class ScaffoldCommand extends Command
             $this->line("   \\App\\Models\\{$modelName}::class => \\App\\Policies\\{$modelName}Policy::class,");
         }
 
-        if (!$config['views']['skip'] && $config['controller']['type'] === 'resource') {
+        if (! $config['views']['skip'] && $config['controller']['type'] === 'resource') {
             $this->line('3. Compile your assets:');
             $this->line('   npm run dev   # or npm run build');
         }

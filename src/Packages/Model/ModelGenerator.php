@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Model;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ModelGenerator
 {
@@ -62,13 +62,13 @@ class ModelGenerator
         $modelName = $this->getModelName($table);
         $namespace = $this->getNamespace($config);
         $modelPath = $this->getModelPath($table, $config);
-        
+
         // Ensure directory exists
         $directory = dirname($modelPath);
-        if (!File::isDirectory($directory)) {
+        if (! File::isDirectory($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
-        
+
         // Generate model content
         $content = $this->generateModelContent(
             $modelName,
@@ -79,7 +79,7 @@ class ModelGenerator
             $relationships,
             $config
         );
-        
+
         File::put($modelPath, $content);
     }
 
@@ -96,16 +96,16 @@ class ModelGenerator
      */
     public function getNamespace(array $config): string
     {
-        if (!empty($config['namespace'])) {
+        if (! empty($config['namespace'])) {
             return $config['namespace'];
         }
-        
+
         $namespace = 'App\\Models';
-        
-        if (!empty($config['dir'])) {
-            $namespace .= '\\' . str_replace('/', '\\', trim($config['dir'], '/'));
+
+        if (! empty($config['dir'])) {
+            $namespace .= '\\'.str_replace('/', '\\', trim($config['dir'], '/'));
         }
-        
+
         return $namespace;
     }
 
@@ -116,12 +116,12 @@ class ModelGenerator
     {
         $modelName = $this->getModelName($table);
         $basePath = app_path('Models');
-        
-        if (!empty($config['dir'])) {
-            $basePath .= '/' . trim($config['dir'], '/');
+
+        if (! empty($config['dir'])) {
+            $basePath .= '/'.trim($config['dir'], '/');
         }
-        
-        return $basePath . '/' . $modelName . '.php';
+
+        return $basePath.'/'.$modelName.'.php';
     }
 
     /**
@@ -137,7 +137,7 @@ class ModelGenerator
         array $config
     ): string {
         $stub = $this->getStub();
-        
+
         $replacements = [
             '{{namespace}}' => $namespace,
             '{{modelName}}' => $modelName,
@@ -156,7 +156,7 @@ class ModelGenerator
             '{{accessors}}' => $this->generateAccessors($tableStructure, $config),
             '{{mutators}}' => $this->generateMutators($tableStructure, $config),
         ];
-        
+
         return str_replace(array_keys($replacements), array_values($replacements), $stub);
     }
 
@@ -165,12 +165,12 @@ class ModelGenerator
      */
     protected function getStub(): string
     {
-        $stubPath = __DIR__ . '/Stubs/model.stub';
-        
+        $stubPath = __DIR__.'/Stubs/model.stub';
+
         if (File::exists($stubPath)) {
             return File::get($stubPath);
         }
-        
+
         // Return default stub if file doesn't exist
         return $this->getDefaultStub();
     }
@@ -184,23 +184,23 @@ class ModelGenerator
             'Illuminate\Database\Eloquent\Model',
             'Illuminate\Database\Eloquent\Factories\HasFactory',
         ];
-        
+
         if ($tableStructure['has_soft_deletes']) {
             $uses[] = 'Illuminate\Database\Eloquent\SoftDeletes';
         }
-        
+
         if ($config['with_validation'] ?? false) {
             $uses[] = 'Illuminate\Database\Eloquent\Casts\Attribute';
         }
-        
+
         // Add relationship uses
-        if (!empty($relationships)) {
+        if (! empty($relationships)) {
             $uses[] = 'Illuminate\Database\Eloquent\Relations\BelongsTo';
             $uses[] = 'Illuminate\Database\Eloquent\Relations\HasMany';
             $uses[] = 'Illuminate\Database\Eloquent\Relations\BelongsToMany';
         }
-        
-        return implode("\n", array_map(fn($use) => "use {$use};", array_unique($uses)));
+
+        return implode("\n", array_map(fn ($use) => "use {$use};", array_unique($uses)));
     }
 
     /**
@@ -209,30 +209,30 @@ class ModelGenerator
     protected function generateClassDocBlock(array $tableStructure): string
     {
         $doc = "/**\n";
-        
+
         // Add property documentation
         foreach ($tableStructure['columns'] as $column) {
             $phpType = $this->getPhpType($column);
             $nullable = $column['nullable'] ? '?' : '';
-            
+
             if ($column['name'] === $tableStructure['primary_key']['columns'][0] ?? null) {
                 $doc .= " * @property-read {$nullable}{$phpType} \${$column['name']}\n";
             } else {
                 $doc .= " * @property {$nullable}{$phpType} \${$column['name']}\n";
             }
         }
-        
+
         // Add index documentation
-        if (!empty($tableStructure['indexes'])) {
+        if (! empty($tableStructure['indexes'])) {
             $doc .= " *\n * Indexes:\n";
             foreach ($tableStructure['indexes'] as $index) {
                 $columns = implode(', ', $index['columns']);
                 $doc .= " * - {$index['name']} ({$columns})\n";
             }
         }
-        
-        $doc .= " */";
-        
+
+        $doc .= ' */';
+
         return $doc;
     }
 
@@ -242,16 +242,16 @@ class ModelGenerator
     protected function generateTraits(array $tableStructure, array $config): string
     {
         $traits = ['HasFactory'];
-        
+
         if ($tableStructure['has_soft_deletes']) {
             $traits[] = 'SoftDeletes';
         }
-        
+
         if (empty($traits)) {
             return '';
         }
-        
-        return 'use ' . implode(', ', $traits) . ';';
+
+        return 'use '.implode(', ', $traits).';';
     }
 
     /**
@@ -268,30 +268,49 @@ class ModelGenerator
     protected function generateProperties(array $tableStructure): string
     {
         $properties = [];
-        
+
         $properties[] = 'protected $connection = self::CONNECTION;';
         $properties[] = "protected \$table = '{$tableStructure['name']}';";
-        
+
         if ($primaryKey = $tableStructure['primary_key']) {
             $keyName = $primaryKey['columns'][0];
-            $properties[] = "protected readonly string \$primaryKey = '{$keyName}';";
-            
+            $properties[] = "protected \$primaryKey = '{$keyName}';";
+
             // Determine if auto-incrementing
             $primaryColumn = collect($tableStructure['columns'])->firstWhere('name', $keyName);
             if ($primaryColumn) {
                 $incrementing = $primaryColumn['auto_increment'] ?? false;
-                $properties[] = 'public readonly bool $incrementing = ' . ($incrementing ? 'true' : 'false') . ';';
-                
+                $properties[] = 'public \$incrementing = '.($incrementing ? 'true' : 'false').';';
+
                 $keyType = $primaryColumn['type'] === 'int' || $primaryColumn['type'] === 'integer' ? 'int' : 'string';
-                $properties[] = "protected readonly string \$keyType = '{$keyType}';";
+                $properties[] = "protected \$keyType = '{$keyType}';";
             }
         }
-        
+
         // Timestamps
         $hasTimestamps = $tableStructure['has_timestamps'];
-        $properties[] = 'public $timestamps = ' . ($hasTimestamps ? 'true' : 'false') . ';';
-        
+        $properties[] = 'public $timestamps = '.($hasTimestamps ? 'true' : 'false').';';
+
+        // Validate properties for PHP syntax correctness
+        $this->validatePropertySyntax($properties);
+
         return implode("\n    ", $properties);
+    }
+
+    /**
+     * Validate generated property syntax to prevent invalid PHP.
+     */
+    protected function validatePropertySyntax(array $properties): void
+    {
+        foreach ($properties as $property) {
+            // Check for readonly properties with default values (invalid PHP)
+            if (preg_match('/readonly.*=/', $property)) {
+                throw new \InvalidArgumentException(
+                    "Invalid property syntax detected: '{$property}'. ".
+                    'Readonly properties cannot have default values in PHP.'
+                );
+            }
+        }
     }
 
     /**
@@ -302,18 +321,18 @@ class ModelGenerator
         $fillable = [];
         $primaryKey = $tableStructure['primary_key']['columns'][0] ?? null;
         $timestampColumns = ['created_at', 'updated_at', 'deleted_at'];
-        
+
         foreach ($tableStructure['columns'] as $column) {
             $columnName = $column['name'];
-            
+
             // Skip primary key and timestamp columns
             if ($columnName === $primaryKey || in_array($columnName, $timestampColumns)) {
                 continue;
             }
-            
+
             $fillable[] = "'{$columnName}'";
         }
-        
+
         return $this->formatArray($fillable, 8);
     }
 
@@ -324,17 +343,17 @@ class ModelGenerator
     {
         $hidden = [];
         $columnNames = array_column($tableStructure['columns'], 'name');
-        
+
         foreach ($this->hiddenFields as $field) {
             if (in_array($field, $columnNames)) {
                 $hidden[] = "'{$field}'";
             }
         }
-        
+
         if (empty($hidden)) {
             return '[]';
         }
-        
+
         return $this->formatArray($hidden, 8);
     }
 
@@ -344,21 +363,21 @@ class ModelGenerator
     protected function generateCasts(array $tableStructure): string
     {
         $casts = [];
-        
+
         foreach ($tableStructure['columns'] as $column) {
             $cast = $this->getCastForColumn($column);
             if ($cast) {
                 $casts[] = "'{$column['name']}' => '{$cast}'";
             }
         }
-        
+
         if (empty($casts)) {
-            return "return [];";
+            return 'return [];';
         }
-        
-        return "return [\n" . 
-               str_repeat(' ', 12) . implode(",\n" . str_repeat(' ', 12), $casts) . "\n" .
-               str_repeat(' ', 8) . "];";
+
+        return "return [\n".
+               str_repeat(' ', 12).implode(",\n".str_repeat(' ', 12), $casts)."\n".
+               str_repeat(' ', 8).'];';
     }
 
     /**
@@ -369,13 +388,13 @@ class ModelGenerator
         if (empty($relationships)) {
             return '';
         }
-        
+
         $methods = [];
-        
+
         foreach ($relationships as $relationship) {
             $methods[] = $this->generateRelationshipMethod($relationship);
         }
-        
+
         return implode("\n\n", $methods);
     }
 
@@ -387,27 +406,30 @@ class ModelGenerator
         $type = $relationship['type'];
         $methodName = $relationship['method_name'];
         $relatedModel = $relationship['related_model'];
-        
+
         $docComment = "    /**\n     * Get the {$relationship['description']}.\n     */";
-        
+
         switch ($type) {
             case 'belongsTo':
                 $foreignKey = $relationship['foreign_key'];
                 $ownerKey = $relationship['owner_key'] ?? 'id';
+
                 return "{$docComment}\n    public function {$methodName}(): BelongsTo\n    {\n        return \$this->belongsTo({$relatedModel}::class, '{$foreignKey}', '{$ownerKey}');\n    }";
-                
+
             case 'hasMany':
                 $foreignKey = $relationship['foreign_key'];
                 $localKey = $relationship['local_key'] ?? 'id';
+
                 return "{$docComment}\n    public function {$methodName}(): HasMany\n    {\n        return \$this->hasMany({$relatedModel}::class, '{$foreignKey}', '{$localKey}');\n    }";
-                
+
             case 'belongsToMany':
                 $pivotTable = $relationship['pivot_table'];
                 $foreignPivotKey = $relationship['foreign_pivot_key'];
                 $relatedPivotKey = $relationship['related_pivot_key'];
+
                 return "{$docComment}\n    public function {$methodName}(): BelongsToMany\n    {\n        return \$this->belongsToMany({$relatedModel}::class, '{$pivotTable}', '{$foreignPivotKey}', '{$relatedPivotKey}');\n    }";
         }
-        
+
         return '';
     }
 
@@ -416,16 +438,16 @@ class ModelGenerator
      */
     protected function generateScopes(array $tableStructure, array $config): string
     {
-        if (!($config['with_scopes'] ?? false)) {
+        if (! ($config['with_scopes'] ?? false)) {
             return '';
         }
-        
+
         $scopes = [];
-        
+
         // Generate common scopes based on column names
         foreach ($tableStructure['columns'] as $column) {
             $columnName = $column['name'];
-            
+
             if ($columnName === 'status') {
                 $scopes[] = $this->generateStatusScope();
             } elseif ($columnName === 'is_active') {
@@ -434,7 +456,7 @@ class ModelGenerator
                 $scopes[] = $this->generatePublishedScope();
             }
         }
-        
+
         return implode("\n\n", $scopes);
     }
 
@@ -443,19 +465,19 @@ class ModelGenerator
      */
     protected function generateAccessors(array $tableStructure, array $config): string
     {
-        if (!($config['with_validation'] ?? false)) {
+        if (! ($config['with_validation'] ?? false)) {
             return '';
         }
-        
+
         $accessors = [];
-        
+
         // Generate common accessors
         $columnNames = array_column($tableStructure['columns'], 'name');
-        
+
         if (in_array('first_name', $columnNames) && in_array('last_name', $columnNames)) {
             $accessors[] = $this->generateFullNameAccessor();
         }
-        
+
         return implode("\n\n", $accessors);
     }
 
@@ -464,19 +486,19 @@ class ModelGenerator
      */
     protected function generateMutators(array $tableStructure, array $config): string
     {
-        if (!($config['with_validation'] ?? false)) {
+        if (! ($config['with_validation'] ?? false)) {
             return '';
         }
-        
+
         $mutators = [];
-        
+
         // Generate common mutators
         foreach ($tableStructure['columns'] as $column) {
             if ($column['name'] === 'password') {
                 $mutators[] = $this->generatePasswordMutator();
             }
         }
-        
+
         return implode("\n\n", $mutators);
     }
 
@@ -486,7 +508,7 @@ class ModelGenerator
     protected function getPhpType(array $column): string
     {
         $type = strtolower($column['type']);
-        
+
         return match ($type) {
             'tinyint' => $column['length'] === 1 ? 'bool' : 'int',
             'boolean', 'bool' => 'bool',
@@ -506,17 +528,18 @@ class ModelGenerator
     {
         $type = strtolower($column['type']);
         $fullType = strtolower($column['full_type'] ?? $type);
-        
+
         // Handle special cases first
         if ($type === 'tinyint' && str_contains($fullType, '(1)')) {
             return 'boolean';
         }
-        
+
         if ($type === 'decimal' || $type === 'numeric') {
             $scale = $column['scale'] ?? 2;
+
             return "decimal:{$scale}";
         }
-        
+
         return $this->castMappings[$type] ?? null;
     }
 
@@ -528,10 +551,11 @@ class ModelGenerator
         if (empty($items)) {
             return '[]';
         }
-        
+
         $spacing = str_repeat(' ', $indent);
-        return "[\n{$spacing}    " . 
-               implode(",\n{$spacing}    ", $items) . 
+
+        return "[\n{$spacing}    ".
+               implode(",\n{$spacing}    ", $items).
                ",\n{$spacing}]";
     }
 

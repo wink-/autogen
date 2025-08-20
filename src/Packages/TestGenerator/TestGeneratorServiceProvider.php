@@ -14,7 +14,7 @@ class TestGeneratorServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/test-generator.php',
+            __DIR__.'/config/test-generator.php',
             'autogen.test-generator'
         );
     }
@@ -26,7 +26,7 @@ class TestGeneratorServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/config/test-generator.php' => config_path('autogen/test-generator.php'),
+                __DIR__.'/config/test-generator.php' => config_path('autogen/test-generator.php'),
             ], 'autogen-test-generator-config');
         }
     }

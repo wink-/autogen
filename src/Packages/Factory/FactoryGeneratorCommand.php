@@ -34,8 +34,6 @@ class FactoryGeneratorCommand extends Command
 
     /**
      * The factory generator instance.
-     *
-     * @var FactoryGenerator
      */
     protected FactoryGenerator $generator;
 
@@ -54,15 +52,16 @@ class FactoryGeneratorCommand extends Command
     public function handle(): int
     {
         $modelName = $this->argument('model');
-        
-        if (!$modelName) {
+
+        if (! $modelName) {
             $this->error('Model name is required.');
+
             return self::FAILURE;
         }
 
         // Normalize model name
         $modelName = Str::studly($modelName);
-        
+
         $this->info("Generating factory for model: {$modelName}");
 
         // Get configuration options
@@ -70,10 +69,11 @@ class FactoryGeneratorCommand extends Command
 
         // Check if factory already exists
         $factoryPath = $this->generator->getFactoryPath($modelName);
-        
-        if (file_exists($factoryPath) && !$this->option('force')) {
-            if (!$this->confirm("Factory {$factoryPath} already exists. Overwrite?")) {
-                $this->warn("Factory generation cancelled.");
+
+        if (file_exists($factoryPath) && ! $this->option('force')) {
+            if (! $this->confirm("Factory {$factoryPath} already exists. Overwrite?")) {
+                $this->warn('Factory generation cancelled.');
+
                 return self::SUCCESS;
             }
         }
@@ -81,34 +81,35 @@ class FactoryGeneratorCommand extends Command
         try {
             // Generate the factory
             $result = $this->generator->generate($modelName, $config);
-            
+
             if ($result['success']) {
                 $this->info("✓ Factory generated successfully: {$result['path']}");
-                
-                if ($config['with_states'] && !empty($result['states'])) {
-                    $this->info("✓ Generated states: " . implode(', ', $result['states']));
+
+                if ($config['with_states'] && ! empty($result['states'])) {
+                    $this->info('✓ Generated states: '.implode(', ', $result['states']));
                 }
-                
-                if ($config['with_relationships'] && !empty($result['relationships'])) {
-                    $this->info("✓ Generated relationship methods: " . implode(', ', $result['relationships']));
+
+                if ($config['with_relationships'] && ! empty($result['relationships'])) {
+                    $this->info('✓ Generated relationship methods: '.implode(', ', $result['relationships']));
                 }
-                
+
                 // Show usage examples
                 $this->showUsageExamples($modelName, $config);
-                
+
                 return self::SUCCESS;
             } else {
-                $this->error("Failed to generate factory: " . $result['error']);
+                $this->error('Failed to generate factory: '.$result['error']);
+
                 return self::FAILURE;
             }
-            
+
         } catch (\Exception $e) {
-            $this->error("Factory generation failed: " . $e->getMessage());
-            
+            $this->error('Factory generation failed: '.$e->getMessage());
+
             if ($this->option('verbose')) {
                 $this->error($e->getTraceAsString());
             }
-            
+
             return self::FAILURE;
         }
     }
@@ -134,29 +135,29 @@ class FactoryGeneratorCommand extends Command
     protected function showUsageExamples(string $modelName, array $config): void
     {
         $this->newLine();
-        $this->info("Usage examples:");
+        $this->info('Usage examples:');
         $this->line("// Create a single {$modelName}");
         $this->line("{$modelName}::factory()->create();");
-        
+
         $this->newLine();
         $this->line("// Create multiple {$modelName}s");
         $this->line("{$modelName}::factory()->count({$config['count']})->create();");
-        
+
         if ($config['with_states']) {
             $this->newLine();
-            $this->line("// Using states (examples)");
+            $this->line('// Using states (examples)');
             $this->line("{$modelName}::factory()->active()->create();");
             $this->line("{$modelName}::factory()->inactive()->create();");
         }
-        
+
         if ($config['with_relationships']) {
             $this->newLine();
-            $this->line("// With relationships");
+            $this->line('// With relationships');
             $this->line("{$modelName}::factory()->withRelationships()->create();");
         }
-        
+
         $this->newLine();
-        $this->line("// Override specific attributes");
+        $this->line('// Override specific attributes');
         $this->line("{$modelName}::factory()->create(['name' => 'Custom Name']);");
     }
 

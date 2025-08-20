@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace AutoGen\Packages\Migration;
 
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
-use Carbon\Carbon;
 use AutoGen\Common\Exceptions\GenerationException;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class MigrationGenerator
 {
     /**
      * The migration template engine instance.
-     *
-     * @var MigrationTemplateEngine
      */
     protected MigrationTemplateEngine $templateEngine;
 
@@ -41,11 +39,11 @@ class MigrationGenerator
         $filePath = $this->getFilePath($fileName, $config);
 
         // Check if migration already exists
-        if (file_exists($filePath) && !$config['force']) {
+        if (file_exists($filePath) && ! $config['force']) {
             return [
                 'generated' => false,
                 'file' => $fileName,
-                'reason' => 'Migration already exists (use --force to overwrite)'
+                'reason' => 'Migration already exists (use --force to overwrite)',
             ];
         }
 
@@ -60,7 +58,7 @@ class MigrationGenerator
 
         // Ensure output directory exists
         $directory = dirname($filePath);
-        if (!File::isDirectory($directory)) {
+        if (! File::isDirectory($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
 
@@ -73,7 +71,7 @@ class MigrationGenerator
             'generated' => true,
             'file' => $fileName,
             'path' => $filePath,
-            'size' => filesize($filePath)
+            'size' => filesize($filePath),
         ];
     }
 
@@ -111,10 +109,10 @@ class MigrationGenerator
      */
     protected function generateMigrationName(string $table, array $config): string
     {
-        $name = 'create_' . $table . '_table';
-        
+        $name = 'create_'.$table.'_table';
+
         // Convert to camel case class name
-        return 'Create' . Str::studly($table) . 'Table';
+        return 'Create'.Str::studly($table).'Table';
     }
 
     /**
@@ -123,14 +121,14 @@ class MigrationGenerator
     protected function generateFileName(string $migrationName, array $config): string
     {
         $timestamp = '';
-        
+
         if ($config['timestamp_prefix']) {
-            $timestamp = Carbon::now()->format('Y_m_d_His') . '_';
+            $timestamp = Carbon::now()->format('Y_m_d_His').'_';
         }
-        
+
         $snakeName = Str::snake($migrationName);
-        
-        return $timestamp . $snakeName . '.php';
+
+        return $timestamp.$snakeName.'.php';
     }
 
     /**
@@ -138,7 +136,7 @@ class MigrationGenerator
      */
     protected function getFilePath(string $fileName, array $config): string
     {
-        return rtrim($config['output_path'], '/') . '/' . $fileName;
+        return rtrim($config['output_path'], '/').'/'.$fileName;
     }
 
     /**
@@ -148,7 +146,7 @@ class MigrationGenerator
     {
         // Separate if there are potential circular dependencies
         $dependencies = $schema['dependencies'];
-        
+
         foreach ($dependencies as $table => $deps) {
             foreach ($deps as $dep) {
                 if (isset($dependencies[$dep]) && in_array($table, $dependencies[$dep])) {
@@ -156,7 +154,7 @@ class MigrationGenerator
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -166,23 +164,24 @@ class MigrationGenerator
     protected function generateForeignKeyMigrations(array $schema, array $config): array
     {
         $results = [];
-        
+
         foreach ($schema['tables'] as $table => $tableStructure) {
             if (empty($tableStructure['foreign_keys'])) {
                 continue;
             }
 
-            $migrationName = 'AddForeignKeysTo' . Str::studly($table) . 'Table';
+            $migrationName = 'AddForeignKeysTo'.Str::studly($table).'Table';
             $fileName = $this->generateFileName($migrationName, $config);
             $filePath = $this->getFilePath($fileName, $config);
 
             // Check if migration already exists
-            if (file_exists($filePath) && !$config['force']) {
+            if (file_exists($filePath) && ! $config['force']) {
                 $results[] = [
                     'generated' => false,
                     'file' => $fileName,
-                    'reason' => 'Foreign key migration already exists'
+                    'reason' => 'Foreign key migration already exists',
                 ];
+
                 continue;
             }
 
@@ -203,7 +202,7 @@ class MigrationGenerator
                 'generated' => true,
                 'file' => $fileName,
                 'path' => $filePath,
-                'type' => 'foreign_keys'
+                'type' => 'foreign_keys',
             ];
         }
 
@@ -215,16 +214,16 @@ class MigrationGenerator
      */
     public function generateRollbackMigration(string $table, array $config): array
     {
-        $migrationName = 'Drop' . Str::studly($table) . 'Table';
+        $migrationName = 'Drop'.Str::studly($table).'Table';
         $fileName = $this->generateFileName($migrationName, $config);
         $filePath = $this->getFilePath($fileName, $config);
 
         // Check if migration already exists
-        if (file_exists($filePath) && !$config['force']) {
+        if (file_exists($filePath) && ! $config['force']) {
             return [
                 'generated' => false,
                 'file' => $fileName,
-                'reason' => 'Rollback migration already exists'
+                'reason' => 'Rollback migration already exists',
             ];
         }
 
@@ -244,7 +243,7 @@ class MigrationGenerator
             'generated' => true,
             'file' => $fileName,
             'path' => $filePath,
-            'type' => 'rollback'
+            'type' => 'rollback',
         ];
     }
 
@@ -254,8 +253,8 @@ class MigrationGenerator
     public function getExistingMigrations(array $config): array
     {
         $migrationPath = $config['output_path'];
-        
-        if (!File::isDirectory($migrationPath)) {
+
+        if (! File::isDirectory($migrationPath)) {
             return [];
         }
 
@@ -281,9 +280,9 @@ class MigrationGenerator
      */
     public function backupExistingMigrations(array $config): string
     {
-        $backupDir = $config['output_path'] . '/backup_' . Carbon::now()->format('Y_m_d_His');
-        
-        if (!File::isDirectory($backupDir)) {
+        $backupDir = $config['output_path'].'/backup_'.Carbon::now()->format('Y_m_d_His');
+
+        if (! File::isDirectory($backupDir)) {
             File::makeDirectory($backupDir, 0755, true);
         }
 
@@ -291,7 +290,7 @@ class MigrationGenerator
         $backed = 0;
 
         foreach ($existing as $migration) {
-            $backupPath = $backupDir . '/' . $migration['file'];
+            $backupPath = $backupDir.'/'.$migration['file'];
             if (File::copy($migration['path'], $backupPath)) {
                 $backed++;
             }
@@ -310,7 +309,7 @@ class MigrationGenerator
 
         foreach ($existing as $migration) {
             // Only delete migrations with autogen pattern
-            if (str_contains($migration['file'], 'create_') && 
+            if (str_contains($migration['file'], 'create_') &&
                 str_contains($migration['file'], '_table.php')) {
                 if (File::delete($migration['path'])) {
                     $cleaned++;
@@ -327,34 +326,35 @@ class MigrationGenerator
     public function validateMigration(string $filePath): array
     {
         $errors = [];
-        
-        if (!file_exists($filePath)) {
+
+        if (! file_exists($filePath)) {
             $errors[] = 'Migration file does not exist';
+
             return $errors;
         }
 
         $content = file_get_contents($filePath);
-        
+
         // Basic syntax check
         if (php_check_syntax($filePath, $output) === false) {
             $errors[] = "PHP syntax error: {$output}";
         }
 
         // Check for required methods
-        if (!str_contains($content, 'public function up()')) {
+        if (! str_contains($content, 'public function up()')) {
             $errors[] = 'Missing up() method';
         }
 
-        if (!str_contains($content, 'public function down()')) {
+        if (! str_contains($content, 'public function down()')) {
             $errors[] = 'Missing down() method';
         }
 
         // Check for Laravel migration class structure
-        if (!str_contains($content, 'use Illuminate\Database\Migrations\Migration')) {
+        if (! str_contains($content, 'use Illuminate\Database\Migrations\Migration')) {
             $errors[] = 'Missing Migration import';
         }
 
-        if (!str_contains($content, 'use Illuminate\Database\Schema\Blueprint')) {
+        if (! str_contains($content, 'use Illuminate\Database\Schema\Blueprint')) {
             $errors[] = 'Missing Blueprint import';
         }
 

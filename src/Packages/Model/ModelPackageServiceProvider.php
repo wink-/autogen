@@ -29,7 +29,7 @@ class ModelPackageServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish stubs
             $this->publishes([
-                __DIR__ . '/Stubs' => resource_path('stubs/autogen/model'),
+                __DIR__.'/Stubs' => resource_path('stubs/autogen/model'),
             ], 'autogen-model-stubs');
 
             // Register commands

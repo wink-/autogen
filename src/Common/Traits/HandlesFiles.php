@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AutoGen\Common\Traits;
 
-use Illuminate\Support\Facades\File;
 use AutoGen\Common\Exceptions\FileNotFoundException;
 use AutoGen\Common\Exceptions\FileNotWritableException;
+use Illuminate\Support\Facades\File;
 
 trait HandlesFiles
 {
@@ -15,11 +15,11 @@ trait HandlesFiles
      */
     protected function readFile(string $path): string
     {
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             throw new FileNotFoundException("File not found: {$path}");
         }
 
-        if (!File::isReadable($path)) {
+        if (! File::isReadable($path)) {
             throw new FileNotFoundException("File is not readable: {$path}");
         }
 
@@ -32,12 +32,12 @@ trait HandlesFiles
     protected function writeFile(string $path, string $content): bool
     {
         $directory = dirname($path);
-        
-        if (!File::isDirectory($directory)) {
+
+        if (! File::isDirectory($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
 
-        if (File::exists($path) && !File::isWritable($path)) {
+        if (File::exists($path) && ! File::isWritable($path)) {
             throw new FileNotWritableException("File is not writable: {$path}");
         }
 
@@ -50,6 +50,7 @@ trait HandlesFiles
     protected function hasAllowedExtension(string $path, array $allowedExtensions): bool
     {
         $extension = File::extension($path);
+
         return empty($allowedExtensions) || in_array($extension, $allowedExtensions, true);
     }
 
@@ -82,7 +83,7 @@ trait HandlesFiles
      */
     protected function ensureDirectoryExists(string $path): void
     {
-        if (!File::isDirectory($path)) {
+        if (! File::isDirectory($path)) {
             File::makeDirectory($path, 0755, true);
         }
     }
@@ -92,19 +93,19 @@ trait HandlesFiles
      */
     protected function getFilesInDirectory(string $directory, array $extensions = []): array
     {
-        if (!File::isDirectory($directory)) {
+        if (! File::isDirectory($directory)) {
             return [];
         }
 
         $files = File::allFiles($directory);
-        
+
         if (empty($extensions)) {
-            return array_map(fn($file) => $file->getPathname(), $files);
+            return array_map(fn ($file) => $file->getPathname(), $files);
         }
 
         return array_filter(
-            array_map(fn($file) => $file->getPathname(), $files),
-            fn($file) => $this->hasAllowedExtension($file, $extensions)
+            array_map(fn ($file) => $file->getPathname(), $files),
+            fn ($file) => $this->hasAllowedExtension($file, $extensions)
         );
     }
 
@@ -115,9 +116,9 @@ trait HandlesFiles
     {
         $realPath = realpath($path);
         $realBasePath = realpath($basePath);
-        
-        return $realPath !== false 
-            && $realBasePath !== false 
+
+        return $realPath !== false
+            && $realBasePath !== false
             && str_starts_with($realPath, $realBasePath);
     }
 }

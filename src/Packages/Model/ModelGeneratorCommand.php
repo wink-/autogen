@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace AutoGen\Packages\Model;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
-use Symfony\Component\Console\Input\InputOption;
 
 class ModelGeneratorCommand extends Command
 {
@@ -36,22 +34,16 @@ class ModelGeneratorCommand extends Command
 
     /**
      * The database introspector instance.
-     *
-     * @var DatabaseIntrospector
      */
     protected DatabaseIntrospector $introspector;
 
     /**
      * The model generator instance.
-     *
-     * @var ModelGenerator
      */
     protected ModelGenerator $generator;
 
     /**
      * The relationship analyzer instance.
-     *
-     * @var RelationshipAnalyzer
      */
     protected RelationshipAnalyzer $relationshipAnalyzer;
 
@@ -64,7 +56,7 @@ class ModelGeneratorCommand extends Command
         RelationshipAnalyzer $relationshipAnalyzer
     ) {
         parent::__construct();
-        
+
         $this->introspector = $introspector;
         $this->generator = $generator;
         $this->relationshipAnalyzer = $relationshipAnalyzer;
@@ -76,9 +68,10 @@ class ModelGeneratorCommand extends Command
     public function handle(): int
     {
         $connection = $this->option('connection');
-        
-        if (!$connection) {
+
+        if (! $connection) {
             $this->error('The --connection option is required.');
+
             return self::FAILURE;
         }
 
@@ -92,10 +85,11 @@ class ModelGeneratorCommand extends Command
 
         if (empty($tables)) {
             $this->warn('No tables found to generate models for.');
+
             return self::SUCCESS;
         }
 
-        $this->info('Found ' . count($tables) . ' table(s) to process.');
+        $this->info('Found '.count($tables).' table(s) to process.');
 
         // Analyze relationships if requested
         $relationships = [];
@@ -113,11 +107,12 @@ class ModelGeneratorCommand extends Command
 
             // Check if model already exists
             $modelPath = $this->generator->getModelPath($table, $config);
-            
-            if (file_exists($modelPath) && !$this->option('force')) {
-                if (!$this->confirm("Model {$modelPath} already exists. Overwrite?")) {
+
+            if (file_exists($modelPath) && ! $this->option('force')) {
+                if (! $this->confirm("Model {$modelPath} already exists. Overwrite?")) {
                     $this->warn("Skipped: {$table}");
                     $skipped++;
+
                     continue;
                 }
             }
@@ -125,7 +120,7 @@ class ModelGeneratorCommand extends Command
             try {
                 // Introspect table structure
                 $tableStructure = $this->introspector->introspectTable($connection, $table);
-                
+
                 // Generate model
                 $this->generator->generate(
                     $connection,
@@ -134,11 +129,11 @@ class ModelGeneratorCommand extends Command
                     $relationships[$table] ?? [],
                     $config
                 );
-                
+
                 $this->info("✓ Generated model for: {$table}");
                 $generated++;
             } catch (\Exception $e) {
-                $this->error("Failed to generate model for {$table}: " . $e->getMessage());
+                $this->error("Failed to generate model for {$table}: ".$e->getMessage());
                 if ($this->option('verbose')) {
                     $this->error($e->getTraceAsString());
                 }
@@ -182,9 +177,9 @@ class ModelGeneratorCommand extends Command
 
         // Filter out ignored tables
         $ignoredTables = config('autogen.tables_to_ignore', []);
-        
+
         return array_values(array_filter($tables, function ($table) use ($ignoredTables) {
-            return !in_array($table, $ignoredTables);
+            return ! in_array($table, $ignoredTables);
         }));
     }
 }

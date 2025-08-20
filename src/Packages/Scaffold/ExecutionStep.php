@@ -8,64 +8,46 @@ class ExecutionStep
 {
     /**
      * Execution order.
-     *
-     * @var int
      */
     protected int $order;
 
     /**
      * Package name.
-     *
-     * @var string
      */
     protected string $package;
 
     /**
      * Command to execute.
-     *
-     * @var string
      */
     protected string $command;
 
     /**
      * Human-readable description.
-     *
-     * @var string
      */
     protected string $description;
 
     /**
      * Dependencies (other packages this step depends on).
-     *
-     * @var array
      */
     protected array $dependencies;
 
     /**
      * Whether this step is critical for the overall process.
-     *
-     * @var bool
      */
     protected bool $isCritical;
 
     /**
      * Command parameters.
-     *
-     * @var array
      */
     protected array $parameters;
 
     /**
      * Resolved dependencies (computed by dependency resolver).
-     *
-     * @var array
      */
     protected array $resolvedDependencies = [];
 
     /**
      * Step metadata.
-     *
-     * @var array
      */
     protected array $metadata;
 
@@ -268,7 +250,7 @@ class ExecutionStep
      */
     public function hasDependencies(): bool
     {
-        return !empty($this->dependencies);
+        return ! empty($this->dependencies);
     }
 
     /**
@@ -284,7 +266,7 @@ class ExecutionStep
      */
     public function addDependency(string $dependency): void
     {
-        if (!$this->hasDependency($dependency)) {
+        if (! $this->hasDependency($dependency)) {
             $this->dependencies[] = $dependency;
         }
     }
@@ -354,7 +336,7 @@ class ExecutionStep
     public function getFullCommand(): string
     {
         $command = $this->command;
-        
+
         foreach ($this->parameters as $key => $value) {
             if (is_bool($value)) {
                 if ($value) {
@@ -362,10 +344,10 @@ class ExecutionStep
                 }
             } elseif (is_array($value)) {
                 foreach ($value as $item) {
-                    $command .= " {$key}=" . escapeshellarg($item);
+                    $command .= " {$key}=".escapeshellarg($item);
                 }
             } else {
-                $command .= " {$key}=" . escapeshellarg($value);
+                $command .= " {$key}=".escapeshellarg($value);
             }
         }
 
@@ -393,12 +375,12 @@ class ExecutionStep
         }
 
         // Validate package name
-        if (!preg_match('/^[a-z_]+$/', $this->package)) {
+        if (! preg_match('/^[a-z_]+$/', $this->package)) {
             $errors[] = 'Package name must contain only lowercase letters and underscores';
         }
 
         // Validate command format
-        if (!preg_match('/^[a-z:_-]+$/', $this->command)) {
+        if (! preg_match('/^[a-z:_-]+$/', $this->command)) {
             $errors[] = 'Command must be a valid artisan command format';
         }
 
@@ -411,7 +393,7 @@ class ExecutionStep
     public function clone(array $modifications = []): self
     {
         $new = clone $this;
-        
+
         foreach ($modifications as $property => $value) {
             if (property_exists($new, $property)) {
                 $new->$property = $value;

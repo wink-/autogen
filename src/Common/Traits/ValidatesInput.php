@@ -33,7 +33,7 @@ trait ValidatesInput
      */
     protected function validateInArray(mixed $value, array $allowed, string $fieldName): void
     {
-        if (!in_array($value, $allowed, true)) {
+        if (! in_array($value, $allowed, true)) {
             $allowedValues = implode(', ', $allowed);
             throw new InvalidArgumentException(
                 "{$fieldName} must be one of: {$allowedValues}. Got: {$value}"
@@ -47,7 +47,7 @@ trait ValidatesInput
     protected function validateRequiredFields(array $data, array $required): void
     {
         foreach ($required as $field) {
-            if (!array_key_exists($field, $data)) {
+            if (! array_key_exists($field, $data)) {
                 throw new InvalidArgumentException("Required field '{$field}' is missing");
             }
         }
@@ -58,7 +58,7 @@ trait ValidatesInput
      */
     protected function validateClassName(string $className): void
     {
-        if (!preg_match('/^[A-Z][a-zA-Z0-9_]*$/', $className)) {
+        if (! preg_match('/^[A-Z][a-zA-Z0-9_]*$/', $className)) {
             throw new InvalidArgumentException(
                 "Invalid class name format: {$className}. Must start with uppercase letter and contain only alphanumeric characters and underscores."
             );
@@ -70,7 +70,7 @@ trait ValidatesInput
      */
     protected function validateNamespace(string $namespace): void
     {
-        if (!preg_match('/^[A-Z][a-zA-Z0-9_\\\\]*[a-zA-Z0-9_]$/', $namespace)) {
+        if (! preg_match('/^[A-Z][a-zA-Z0-9_\\\\]*[a-zA-Z0-9_]$/', $namespace)) {
             throw new InvalidArgumentException(
                 "Invalid namespace format: {$namespace}"
             );
@@ -94,7 +94,7 @@ trait ValidatesInput
      */
     protected function validatePattern(string $value, string $pattern, string $fieldName): void
     {
-        if (!preg_match($pattern, $value)) {
+        if (! preg_match($pattern, $value)) {
             throw new InvalidArgumentException(
                 "{$fieldName} does not match required pattern: {$pattern}"
             );
@@ -107,13 +107,13 @@ trait ValidatesInput
     protected function validateLength(string $value, int $min, int $max, string $fieldName): void
     {
         $length = strlen($value);
-        
+
         if ($length < $min) {
             throw new InvalidArgumentException(
                 "{$fieldName} must be at least {$min} characters long. Got {$length}."
             );
         }
-        
+
         if ($length > $max) {
             throw new InvalidArgumentException(
                 "{$fieldName} must be no more than {$max} characters long. Got {$length}."

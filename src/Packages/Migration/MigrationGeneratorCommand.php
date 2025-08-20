@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AutoGen\Packages\Migration;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputOption;
 
 class MigrationGeneratorCommand extends Command
@@ -37,15 +36,11 @@ class MigrationGeneratorCommand extends Command
 
     /**
      * The database schema analyzer instance.
-     *
-     * @var DatabaseSchemaAnalyzer
      */
     protected DatabaseSchemaAnalyzer $analyzer;
 
     /**
      * The migration generator instance.
-     *
-     * @var MigrationGenerator
      */
     protected MigrationGenerator $generator;
 
@@ -57,7 +52,7 @@ class MigrationGeneratorCommand extends Command
         MigrationGenerator $generator
     ) {
         parent::__construct();
-        
+
         $this->analyzer = $analyzer;
         $this->generator = $generator;
     }
@@ -68,9 +63,10 @@ class MigrationGeneratorCommand extends Command
     public function handle(): int
     {
         $connection = $this->option('connection');
-        
-        if (!$connection) {
+
+        if (! $connection) {
             $this->error('The --connection option is required.');
+
             return self::FAILURE;
         }
 
@@ -80,7 +76,8 @@ class MigrationGeneratorCommand extends Command
             // Validate connection
             $this->analyzer->validateConnection($connection);
         } catch (\Exception $e) {
-            $this->error("Failed to connect to database: " . $e->getMessage());
+            $this->error('Failed to connect to database: '.$e->getMessage());
+
             return self::FAILURE;
         }
 
@@ -92,10 +89,11 @@ class MigrationGeneratorCommand extends Command
 
         if (empty($tables)) {
             $this->warn('No tables found to generate migrations for.');
+
             return self::SUCCESS;
         }
 
-        $this->info('Found ' . count($tables) . ' table(s) to process.');
+        $this->info('Found '.count($tables).' table(s) to process.');
 
         // Analyze database schema
         $this->info('Analyzing database schema...');
@@ -133,7 +131,7 @@ class MigrationGeneratorCommand extends Command
                     $skipped++;
                 }
             } catch (\Exception $e) {
-                $this->error("Failed to generate migration for {$table}: " . $e->getMessage());
+                $this->error("Failed to generate migration for {$table}: ".$e->getMessage());
                 if ($this->option('verbose')) {
                     $this->error($e->getTraceAsString());
                 }
@@ -141,13 +139,13 @@ class MigrationGeneratorCommand extends Command
         }
 
         $this->newLine();
-        $this->info("Migration generation complete!");
+        $this->info('Migration generation complete!');
         $this->info("Generated: {$generated}, Skipped: {$skipped}");
 
         if ($generated > 0) {
             $this->newLine();
-            $this->info("Next steps:");
-            $this->line("1. Review the generated migration files");
+            $this->info('Next steps:');
+            $this->line('1. Review the generated migration files');
             $this->line("2. Run 'php artisan migrate' to apply the migrations");
             $this->line("3. Test rollback with 'php artisan migrate:rollback'");
         }
@@ -190,7 +188,7 @@ class MigrationGeneratorCommand extends Command
         } else {
             // Interactive table selection
             $availableTables = $this->analyzer->getAllTables($connection);
-            
+
             if (empty($availableTables)) {
                 return [];
             }
@@ -223,9 +221,9 @@ class MigrationGeneratorCommand extends Command
             'password_reset_tokens',
             'personal_access_tokens',
         ]);
-        
+
         return array_values(array_filter($tables, function ($table) use ($ignoredTables) {
-            return !in_array($table, $ignoredTables);
+            return ! in_array($table, $ignoredTables);
         }));
     }
 

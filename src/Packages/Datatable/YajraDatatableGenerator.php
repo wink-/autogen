@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 class YajraDatatableGenerator
 {
     protected string $modelName;
+
     protected array $options;
+
     protected array $generatedFiles = [];
 
     public function __construct(string $modelName, array $options = [])
@@ -25,7 +27,7 @@ class YajraDatatableGenerator
     public function generate(): array
     {
         $this->generateDataTableClass();
-        
+
         return $this->generatedFiles;
     }
 
@@ -40,7 +42,7 @@ class YajraDatatableGenerator
         $stub = $this->getStub();
         $content = $this->replaceStubVariables($stub);
 
-        if (File::exists($path) && !($this->options['force'] ?? false)) {
+        if (File::exists($path) && ! ($this->options['force'] ?? false)) {
             throw new \Exception("DataTable already exists at: {$path}");
         }
 
@@ -54,12 +56,12 @@ class YajraDatatableGenerator
     protected function getStub(): string
     {
         $customStubPath = config('autogen.custom_stubs_path');
-        
-        if ($customStubPath && File::exists($customStubPath . '/datatable/yajra.datatable.stub')) {
-            return File::get($customStubPath . '/datatable/yajra.datatable.stub');
+
+        if ($customStubPath && File::exists($customStubPath.'/datatable/yajra.datatable.stub')) {
+            return File::get($customStubPath.'/datatable/yajra.datatable.stub');
         }
 
-        return File::get(__DIR__ . '/Stubs/yajra.datatable.stub');
+        return File::get(__DIR__.'/Stubs/yajra.datatable.stub');
     }
 
     /**
@@ -70,7 +72,7 @@ class YajraDatatableGenerator
         $replacements = $this->getReplacements();
 
         foreach ($replacements as $key => $value) {
-            $stub = str_replace('{{ ' . $key . ' }}', $value, $stub);
+            $stub = str_replace('{{ '.$key.' }}', $value, $stub);
         }
 
         return $stub;
@@ -84,7 +86,7 @@ class YajraDatatableGenerator
         $modelClass = $this->getModelClass();
         $modelNamespace = $this->getModelNamespace();
         $datatableNamespace = $this->getDataTableNamespace();
-        $datatableName = $modelClass . 'DataTable';
+        $datatableName = $modelClass.'DataTable';
         $modelVariable = $this->getModelVariable();
         $routeName = $this->getRouteName();
 
@@ -129,7 +131,7 @@ class YajraDatatableGenerator
         foreach ($columns as $column => $config) {
             $searchable = $config['searchable'] ? 'true' : 'false';
             $orderable = $config['orderable'] ? 'true' : 'false';
-            
+
             if ($column === 'select') {
                 $columnDefinitions[] = "            Column::checkbox('select')
                 ->title('<input type=\"checkbox\" id=\"select-all\">')
@@ -170,7 +172,7 @@ class YajraDatatableGenerator
      */
     protected function getSearchableColumns(): string
     {
-        if (!($this->options['withSearch'] ?? false)) {
+        if (! ($this->options['withSearch'] ?? false)) {
             return '';
         }
 
@@ -229,7 +231,7 @@ class YajraDatatableGenerator
      */
     protected function getCacheImplementation(): string
     {
-        if (!($this->options['cache'] ?? false)) {
+        if (! ($this->options['cache'] ?? false)) {
             return '';
         }
 
@@ -262,7 +264,7 @@ class YajraDatatableGenerator
      */
     protected function getExportColumns(): string
     {
-        if (!($this->options['withExports'] ?? false)) {
+        if (! ($this->options['withExports'] ?? false)) {
             return '';
         }
 
@@ -287,7 +289,7 @@ class YajraDatatableGenerator
      */
     protected function getBulkActions(): string
     {
-        if (!($this->options['withBulk'] ?? false)) {
+        if (! ($this->options['withBulk'] ?? false)) {
             return '';
         }
 
@@ -350,7 +352,7 @@ class YajraDatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -367,7 +369,7 @@ class YajraDatatableGenerator
         if (str_contains($modelPath, '\\')) {
             $parts = explode('\\', $modelPath);
             array_pop($parts);
-            $namespace .= '\\' . implode('\\', $parts);
+            $namespace .= '\\'.implode('\\', $parts);
         }
 
         return $namespace;
@@ -387,7 +389,8 @@ class YajraDatatableGenerator
     protected function getRouteName(): string
     {
         $parts = explode('/', $this->modelName);
-        $names = array_map(fn($part) => Str::kebab($part), $parts);
+        $names = array_map(fn ($part) => Str::kebab($part), $parts);
+
         return implode('.', $names);
     }
 
@@ -402,10 +405,10 @@ class YajraDatatableGenerator
         if (str_contains($modelPath, '/')) {
             $parts = explode('/', $modelPath);
             array_pop($parts);
-            $path .= '/' . implode('/', $parts);
+            $path .= '/'.implode('/', $parts);
         }
 
-        return $path . '/' . $this->getModelClass() . 'DataTable.php';
+        return $path.'/'.$this->getModelClass().'DataTable.php';
     }
 
     /**
@@ -413,7 +416,7 @@ class YajraDatatableGenerator
      */
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }

@@ -22,19 +22,19 @@ class OpenAIProvider extends BaseAIProvider
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a helpful PHP code generator. Generate clean, well-documented, and PSR-12 compliant code.'
+                    'content' => 'You are a helpful PHP code generator. Generate clean, well-documented, and PSR-12 compliant code.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->buildPrompt($prompt, $options)
-                ]
+                    'content' => $this->buildPrompt($prompt, $options),
+                ],
             ],
             'temperature' => $this->getConfigValue('temperature', 0.2),
             'max_tokens' => $this->getConfigValue('max_tokens', 4096),
         ];
 
         $response = $this->makeRequest('/chat/completions', $data);
-        
+
         return $this->cleanGeneratedCode(
             $this->extractCode($response['choices'][0]['message']['content'] ?? '')
         );
@@ -48,24 +48,24 @@ class OpenAIProvider extends BaseAIProvider
         $this->validateNotEmpty($code, 'code');
 
         $prompt = "Analyze the following PHP code and provide suggestions for improvements:\n\n{$code}";
-        
+
         $data = [
             'model' => $this->getConfigValue('model', 'gpt-4-turbo'),
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a PHP code analysis expert. Provide detailed analysis including code quality, security, performance, and maintainability suggestions.'
+                    'content' => 'You are a PHP code analysis expert. Provide detailed analysis including code quality, security, performance, and maintainability suggestions.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->buildPrompt($prompt, $options)
-                ]
+                    'content' => $this->buildPrompt($prompt, $options),
+                ],
             ],
             'temperature' => $this->getConfigValue('temperature', 0.2),
         ];
 
         $response = $this->makeRequest('/chat/completions', $data);
-        
+
         // Parse the response and return structured analysis
         return $this->parseAnalysisResponse($response['choices'][0]['message']['content'] ?? '');
     }
@@ -78,24 +78,24 @@ class OpenAIProvider extends BaseAIProvider
         $this->validateNotEmpty($code, 'code');
 
         $prompt = "Generate comprehensive PHPUnit tests for the following code:\n\n{$code}";
-        
+
         $data = [
             'model' => $this->getConfigValue('model', 'gpt-4-turbo'),
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a PHP testing expert. Generate comprehensive PHPUnit tests with good coverage, edge cases, and clear test names.'
+                    'content' => 'You are a PHP testing expert. Generate comprehensive PHPUnit tests with good coverage, edge cases, and clear test names.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->buildPrompt($prompt, $options)
-                ]
+                    'content' => $this->buildPrompt($prompt, $options),
+                ],
             ],
             'temperature' => $this->getConfigValue('temperature', 0.2),
         ];
 
         $response = $this->makeRequest('/chat/completions', $data);
-        
+
         return $this->cleanGeneratedCode(
             $this->extractCode($response['choices'][0]['message']['content'] ?? '')
         );
@@ -109,24 +109,24 @@ class OpenAIProvider extends BaseAIProvider
         $this->validateNotEmpty($code, 'code');
 
         $prompt = "Generate comprehensive documentation for the following PHP code:\n\n{$code}";
-        
+
         $data = [
             'model' => $this->getConfigValue('model', 'gpt-4-turbo'),
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a technical documentation expert. Generate clear, comprehensive documentation with examples.'
+                    'content' => 'You are a technical documentation expert. Generate clear, comprehensive documentation with examples.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->buildPrompt($prompt, $options)
-                ]
+                    'content' => $this->buildPrompt($prompt, $options),
+                ],
             ],
             'temperature' => $this->getConfigValue('temperature', 0.2),
         ];
 
         $response = $this->makeRequest('/chat/completions', $data);
-        
+
         return $response['choices'][0]['message']['content'] ?? '';
     }
 
@@ -138,24 +138,24 @@ class OpenAIProvider extends BaseAIProvider
         $this->validateNotEmpty($code, 'code');
 
         $prompt = "Optimize the following PHP code for performance, readability, and maintainability:\n\n{$code}";
-        
+
         $data = [
             'model' => $this->getConfigValue('model', 'gpt-4-turbo'),
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a PHP optimization expert. Improve code performance, readability, and maintainability while preserving functionality.'
+                    'content' => 'You are a PHP optimization expert. Improve code performance, readability, and maintainability while preserving functionality.',
                 ],
                 [
                     'role' => 'user',
-                    'content' => $this->buildPrompt($prompt, $options)
-                ]
+                    'content' => $this->buildPrompt($prompt, $options),
+                ],
             ],
             'temperature' => $this->getConfigValue('temperature', 0.2),
         ];
 
         $response = $this->makeRequest('/chat/completions', $data);
-        
+
         return $this->cleanGeneratedCode(
             $this->extractCode($response['choices'][0]['message']['content'] ?? '')
         );
@@ -174,7 +174,7 @@ class OpenAIProvider extends BaseAIProvider
      */
     protected function hasRequiredCredentials(): bool
     {
-        return !empty($this->getConfigValue('api_key'));
+        return ! empty($this->getConfigValue('api_key'));
     }
 
     /**
